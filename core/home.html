@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="local://html/images/icon-big.png" type="image/png">
+  <link rel="stylesheet" href="local://html/style/style.css">
+  <meta name="theme-color" content="#ffffff">
+  <title>New Tab</title>
+  <style>
+    /* Reset */
+    * { 
+      margin:0; 
+      padding:0; 
+      box-sizing:border-box; 
+      font-family:"Segoe UI", 
+      Roboto, sans-serif; 
+    }
+
+    .logo img {
+      user-select: none;        /* cannot select */
+      -webkit-user-drag: none;  /* Web kit prevent drag */
+      -moz-user-select: none;   /* Firefox prevent drag */
+      -ms-user-select: none;    /* IE/Edge prevent drag */
+      pointer-events: none;     /* untouchable/clicks pass through */
+    }
+
+
+    html { 
+      font-size:16px; 
+    }
+
+    /* Make everything unselectable by default */
+    body, h1, footer, .logo, .search-box button {
+      user-select: none;
+      -webkit-user-select: none; /* Safari */
+      -moz-user-select: none;    /* Firefox */
+      -ms-user-select: none;     /* IE/Edge */
+    }
+
+    /* Make input selectable */
+    .search-box input {
+      user-select: text;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+    }
+
+    body {
+      background: white;
+      color: rgb(8,8,8);
+      min-height: 100vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:2rem;
+      animation: fadeIn 1s ease-in-out;
+      transition: background 2s, color 2s;
+    }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+    h1 { font-size:3rem; font-weight:700; margin-bottom:2.5rem; letter-spacing:0.125rem; }
+    .search-box {
+      position:relative; 
+      width:80%; 
+      max-width:40rem; 
+      cursor: default;
+      display: flex;
+      min-height: 52px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .search-box input {
+      width:100%;
+      padding:1rem 1.25rem;
+      border:none;
+      border-radius:50rem;
+      outline:none;
+      font-size:1.25rem;
+      transition:0.3s ease;
+      box-shadow:0 0 0.9rem rgba(124,124,124,0.4);
+      background:#fff;
+      color:#000;
+    }
+    .search-box input:focus { box-shadow:0 0 0.9rem rgba(24,24,24,0.4); }
+    /* .search-box button {
+      position:absolute; 
+      right:0.6rem; 
+      top:50%; 
+      transform:translateY(-50%);
+      background:#cacaca; border:none; 
+      color:rgb(71,71,71);
+      padding:0.6rem 0.9rem; 
+      border-radius:50%; 
+      font-size:1.1rem; 
+      cursor:pointer; 
+      transition:0.2s;
+    } */
+
+    .search-box button {
+      position:absolute; 
+      right:0.6rem; 
+      top:50%; 
+      transform:translateY(-50%);
+      background:#42a0ff; border:none; 
+      color:#fff;
+      padding:0.75rem 1.5rem;
+      border-radius:50rem;
+      font-size:1.1rem; 
+      cursor:pointer; 
+      transition:0.3s;
+      display:inline-block;
+      font-weight:600;
+    }
+
+    .search-box button:hover { background:#3390e0; }
+    footer { margin-top:auto; padding:1rem; font-size:0.9rem; color:rgba(0,0,0,0.6); }
+    .logo { width:60%; max-width:300px; margin-bottom:2rem; }
+    .logo img { width:100%; height:auto; display:block; margin:0 auto; }
+
+    /* Dark mode class (applied by JS) */
+    body.dark-mode {
+      background:#1c1c1c;
+      color:#f5f5f5;
+    }
+    body.dark-mode .search-box input {
+      background:#474747;
+      color:#f5f5f5;
+      box-shadow:0 0 0.9rem rgba(0,0,0,0.7);
+    }
+    body.dark-mode .search-box input::placeholder { color:rgba(245,245,245,0.6); }
+    body.dark-mode .search-box button { background:#42a0ff; color:#fff; }
+    body.dark-mode .search-box button:hover { background:#3390e0; }
+    body.dark-mode footer { color:rgba(255,255,255,0.6); }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <img src="local://html/images/icon-big.png" alt="NoxeBrowser Logo">
+  </div>
+
+  <h1>NoxeBrowser</h1>
+  <form class="search-box" action="https://google.com/search" method="GET">
+    <input type="text" name="q" placeholder="Search with Google..." required autofocus>
+    <button type="submit">Search</button>
+  </form>
+
+  <footer>© Noxe Browser 2025</footer>
+
+  <script>
+    // Apply dark mode dynamically if matchMedia says dark
+    function applyDarkMode() {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    // Run after page load
+    window.addEventListener('load', applyDarkMode);
+
+    // Optional: listen to changes (not strictly needed in your PyQt case)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyDarkMode);
+  
+  </script>
+</body>
+</html>

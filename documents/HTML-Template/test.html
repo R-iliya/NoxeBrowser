@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="local://html/images/icon-big.png" type="image/png">
+  <link rel="stylesheet" href="local://html/style/style.css">
+  <meta name="theme-color" content="#ffffff">
+  <title>Test</title>
+</head>
+<body>
+
+  <footer>© Neko Browser 2025</footer>
+
+  <script>
+    // Apply dark mode dynamically if matchMedia says dark
+    function applyDarkMode() {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    // Run after page load
+    window.addEventListener('load', applyDarkMode);
+
+    // Optional: listen to changes (not strictly needed in your PyQt case)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyDarkMode);
+  </script>
+</body>
+</html>

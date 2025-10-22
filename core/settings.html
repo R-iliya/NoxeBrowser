@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Unreachable</title>
+<style>
+  /* Reset & global styles */
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Roboto, sans-serif; }
+  html { font-size:16px; }
+  body, h1, p, a, footer { user-select:none; -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; }
+  a { text-decoration:none; }
+  body { 
+    min-height:100vh; 
+    display:flex; 
+    flex-direction:column; 
+    justify-content:center; 
+    align-items:center; 
+    text-align:center; 
+    padding:2rem; 
+    background:white; 
+    color:rgb(8,8,8); 
+    transition:background 0.5s, color 0.5s; 
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  
+  h1 { font-size:3rem; font-weight:700; margin-bottom:1rem; letter-spacing:0.125rem; }
+  p { font-size:1.125rem; margin-bottom:1.5rem; }
+  a.button { 
+    display:inline-block; 
+    padding:0.75rem 1.5rem; 
+    border-radius:50rem; 
+    background:#42a0ff; 
+    color:#fff; 
+    font-weight:600; 
+    transition:0.3s; 
+  }
+  a.button:hover { background:#3390e0; }
+  footer { margin-top:2rem; font-size:0.9rem; color:rgba(0,0,0,0.5); }
+
+  /* Dark mode */
+  body.dark-mode { background:#1c1c1c; color:#f5f5f5; }
+  body.dark-mode footer { color:rgba(255,255,255,0.5); }
+  body.dark-mode a.button { background:#42a0ff; color:#fff; }
+  body.dark-mode a.button:hover { background:#3390e0; }
+
+  /* Logo if you want to include */
+  .logo { width:120px; margin-bottom:2rem; pointer-events:none; user-select:none; }
+  .logo img { width:100%; height:auto; display:block; }
+</style>
+</head>
+<body>
+  <!-- Optional logo -->
+  <div class="logo">
+    <img src="local://html/images/icon-big.png" alt="Noxe Browser">
+  </div>
+
+  <h1>Oops!</h1>
+  <p>The page <strong>{self.url().toString()}</strong> could not be loaded.</p>
+  <a href="local://home" class="button">Go Home</a>
+
+  <footer>© Noxe Browser 2025</footer>
+
+  <script>
+    // Auto-switch based on system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if(prefersDark) document.body.classList.add('dark-mode');
+  </script>
+</body>
+</html>
