@@ -93,7 +93,7 @@ For Linux users, browser checks if user is dark mode through the os.environ.get(
 
 For MacOS users, browser checks if user is dark mode through a subprocess.run() and if yes, it'd implement dark mode for supported websites.
 
-## Download Manager
+#### Download Manager
 Browser presents a clean download manager which is toggle able and persistent, cancel option and a load bar; Though Download manager is still under development for more advanced features.
 
 
