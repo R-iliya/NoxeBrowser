@@ -27,6 +27,7 @@ from core.scheme import *
 from core.browser import *
 from core.mainwindow import *
 
+
 if sys.platform.startswith("win"):
     import ctypes
     # Make the app DPI aware so it scales correctly on high-DPI displays
