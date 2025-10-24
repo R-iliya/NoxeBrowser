@@ -16,7 +16,7 @@
 > – Austin Freeman
 
 NoxeBrowser is wrote on python a fast paced modern language, achieving speed, performance and ease of use with PyQt5, functools, etc.
-The code is also modelized and something around 1500 lines of code is cleanly put together, making everything way easier to contribute, which we're clearly looking forward to.
+The code is also modularized and something around 1500 lines of code is cleanly put together, making everything way easier to contribute, which we're clearly looking forward to.
 
 
 NoxeBrowser is aiming to make a clean and secure environment for any user; Developer, Housewife, Gamer, Artist etc.
