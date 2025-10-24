@@ -344,6 +344,12 @@ class MainWindow(QMainWindow):
         self.show()
         self.showMaximized()
         self.setWindowTitle("Noxe Browser")
+        icon = QIcon("core/icon.ico")
+        self.setWindowIcon(icon)
+        if sys.platform.startswith("win"):
+            import ctypes
+            app_id = u"noxe.browser.1.0"
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
 
         profile = QWebEngineProfile.defaultProfile()
         profile.setCachePath("./browser/cache")
