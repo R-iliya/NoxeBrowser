@@ -348,7 +348,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(icon)
         if sys.platform.startswith("win"):
             import ctypes
-            app_id = u"noxe.browser.1.0"
+            app_id = u"noxe.browser.1.6"
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
 
         profile = QWebEngineProfile.defaultProfile()
