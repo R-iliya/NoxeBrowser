@@ -40,15 +40,7 @@ class MainWindow(QMainWindow):
             super().__init__(parent)
             self.main_window = main_window
             self.loadFinished.connect(self.on_load_finished)
-            icon = QIcon("img/appicon.png")  # or .ico file if you have one
-            self.setWindowIcon(icon)
-
-            # --- For Windows Taskbar icon ---
-            if sys.platform.startswith("win"):
-                import ctypes
-                app_id = u"noxe.browser.1.0"  # your unique app id
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-            
+        
         def on_load_finished(self, ok):
             if not ok:
                 url = self.url().toString()
