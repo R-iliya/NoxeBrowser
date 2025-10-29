@@ -1,3 +1,5 @@
+![Banner](https://raw.githubusercontent.com/R-iliya/NoxeBrowser/refs/heads/main/banner.png?raw=true)
+
 # NoxeBrowser ![authoor](https://img.shields.io/badge/By:-R._iliya-green)
 
 ![GitHub stars](https://img.shields.io/github/stars/R-iliya/NoxeBrowser?style=flat&color=4A2BE3)
