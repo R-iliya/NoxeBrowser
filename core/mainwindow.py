@@ -167,10 +167,26 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
         
 	    # --- Define bookmarks & history file paths first ---
-        self.bookmarks_file = os.path.join(os.path.dirname(__file__), "bookmarks.json")
+
+        import os
+        import sys
+
+        def get_data_folder():
+            if getattr(sys, 'frozen', False):
+                # running as exe
+                base_dir = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "NoxeBrowser")
+            else:
+                # running as script
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+
+            if not os.path.exists(base_dir):
+                os.makedirs(base_dir)
+            return base_dir
+
+        data_folder = get_data_folder()
+        self.bookmarks_file = os.path.join(data_folder, "bookmarks.json")
+        self.history_file = os.path.join(data_folder, "history.json")
         self.bookmarks = []
-        
-        self.history_file = os.path.join(os.path.dirname(__file__), "history.json")
         self.history = []
 
         # profiles for downloads
@@ -452,7 +468,7 @@ class MainWindow(QMainWindow):
             "bookmarks_visible": self.bm_action.isChecked(),
             "history_visible": self.history_action.isChecked()
         }
-        with open("settings.json", "w") as f:
+        with open("settings.json", "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=2)
         
     # --- docks ---

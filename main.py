@@ -36,6 +36,15 @@ if sys.platform.startswith("win"):
     except Exception:
         pass
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and PyInstaller exe."""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 # ---- MAIN ENTRYPOINT ----
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -47,4 +56,7 @@ if __name__ == "__main__":
         app.setStyle("Fusion")
     window = MainWindow()
     window.setAutoFillBackground(True)
+    icon_path = resource_path("core/icon.ico")  # bundled with --add-data "core;core"
+    window.setWindowIcon(QIcon(icon_path))
+    window.show()
     sys.exit(app.exec_())
