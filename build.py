@@ -57,7 +57,7 @@ for folder in extra_folders:
     dst = os.path.join(dist_path, folder)
     if os.path.exists(dst):
         shutil.rmtree(dst)
-    shutil.copytree(src, dst)
+    shutil.copytree(src, dst, dirs_exist_ok=True)
     print(f"📁 Copied {folder} into dist folder")
 
 # Ask for version name and create ZIP
