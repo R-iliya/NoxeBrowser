@@ -20,6 +20,7 @@ PyInstaller.__main__.run([
     "--noconfirm",
     "--windowed",
     "--onefile",
+    "--noupx",
     f"--icon={icon_path}",
     f"--name={project_name}",
     "--add-data=core;core",
