@@ -61,18 +61,12 @@ vname = input("Enter version name (e.g., v1.0): ").strip()
 if vname:
     zip_filename = f"{project_name}_{vname}.zip"
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Walk only the dist folder, including copied core and img
         for root, dirs, files in os.walk(dist_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, dist_path)
                 zipf.write(file_path, arcname)
-        # Include the extra folders in the zip
-        for folder in extra_folders:
-            for root, dirs, files in os.walk(folder):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arcname = os.path.join(folder, os.path.relpath(file_path, folder))
-                    zipf.write(file_path, arcname)
     print(f"📦 Dist folder zipped as {zip_filename}")
 else:
     print("⚠️ No version name entered. Skipping ZIP creation.")
