@@ -6,6 +6,7 @@ import zipfile
 project_name = "NoxeBrowser"
 main_script = "main.py"
 icon_path = os.path.join("core", "icon.ico")
+extra_folders = ["core", "img"]  # folders to copy into dist and zip
 
 # Clean old builds
 for target in ["build", "dist", f"{project_name}.spec"]:
@@ -45,18 +46,33 @@ os.system('cls' if os.name == 'nt' else 'clear')
 print("✅ Build complete!")
 print(f"Check your dist folder for {project_name}.exe")
 
+# Copy extra folders into dist
+dist_path = "dist"
+for folder in extra_folders:
+    src = folder
+    dst = os.path.join(dist_path, folder)
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst)
+    print(f"📁 Copied {folder} into dist folder")
+
 # Ask for version name and create ZIP
-print("Enter version name (e.g., v1.0): ")
-vname = input(">>").strip()
+vname = input("Enter version name (e.g., v1.0): ").strip()
 if vname:
     zip_filename = f"{project_name}_{vname}.zip"
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        dist_path = "dist"
         for root, dirs, files in os.walk(dist_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, dist_path)
                 zipf.write(file_path, arcname)
+        # Include the extra folders in the zip
+        for folder in extra_folders:
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.join(folder, os.path.relpath(file_path, folder))
+                    zipf.write(file_path, arcname)
     print(f"📦 Dist folder zipped as {zip_filename}")
 else:
     print("⚠️ No version name entered. Skipping ZIP creation.")
