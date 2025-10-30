@@ -1,6 +1,7 @@
 import PyInstaller.__main__
 import os
 import shutil
+import zipfile
 
 project_name = "NoxeBrowser"
 main_script = "main.py"
@@ -15,6 +16,7 @@ for target in ["build", "dist", f"{project_name}.spec"]:
         else:
             os.remove(target)
 
+# Run PyInstaller
 PyInstaller.__main__.run([
     main_script,
     "--noconfirm",
@@ -38,9 +40,23 @@ PyInstaller.__main__.run([
     "--collect-submodules=PyQt5.QtWebChannel",
 ])
 
-def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print("✅ Build complete!")
-clear()
-
+# Clear console and notify build completion
+os.system('cls' if os.name == 'nt' else 'clear')
+print("✅ Build complete!")
 print(f"Check your dist folder for {project_name}.exe")
+
+# Ask for version name and create ZIP
+print("Enter version name (e.g., v1.0): ")
+vname = input(">>").strip()
+if vname:
+    zip_filename = f"{project_name}_{vname}.zip"
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        dist_path = "dist"
+        for root, dirs, files in os.walk(dist_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, dist_path)
+                zipf.write(file_path, arcname)
+    print(f"📦 Dist folder zipped as {zip_filename}")
+else:
+    print("⚠️ No version name entered. Skipping ZIP creation.")
