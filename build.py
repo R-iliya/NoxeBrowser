@@ -39,5 +39,9 @@ PyInstaller.__main__.run([
     "--collect-all=PyQt5.QtGui",
 ])
 
-print("\n✅ Build complete!")
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("\n✅ Build complete!")
+clear()
+
 print(f"Check your dist folder for {project_name}.exe")
