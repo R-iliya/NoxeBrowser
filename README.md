@@ -1,4 +1,4 @@
-![Banner](./banner.png?raw=true)
+![Banner](./documents/banner.png?raw=true)
 
 # NoxeBrowser ![authoor](https://img.shields.io/badge/By:-R._iliya-green)
 
@@ -21,7 +21,7 @@ In a world full of browsers that spy on you, nag you with ads, and feel like the
 
 We wanted a browser that doesn’t just load pages—it understands them, respects them, and respects you. A place where performance meets simplicity, and where clutter and distractions don’t have a seat at the table.
 
-![Screenshot 1](https://github.com/R-iliya/NoxeBrowser/blob/main/Screenshot-Dark.png?raw=true)
+![Screenshot 1](./documents/Screenshot-Dark.png?raw=true)
 
 NoxeBrowser isn’t about fancy gimmicks. It’s about clarity: clear code, clear UI, and a clear purpose. Every line of code, every feature, every tiny shortcut was designed to make your life easier, faster, and yes, even a little cooler.
 
@@ -29,7 +29,7 @@ We made it because the web should feel personal, not corporate. Because a browse
 
 And most importantly? Because sometimes, you just want a browser that just works, without making you jump through hoops—or worse, begging for permission to exist online.
 
-![Screenshot 2](https://github.com/R-iliya/NoxeBrowser/blob/main/Screenshot-Light.png?raw=true)
+![Screenshot 2](./documents/Screenshot-Light.png?raw=true)
 
 > “Simplicity is the soul of efficiency.”  
 > – Austin Freeman
