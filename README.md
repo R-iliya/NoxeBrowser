@@ -9,21 +9,13 @@
 ![GitHub license](https://img.shields.io/github/license/R-iliya/NoxeBrowser?style=flat&color=4A2BE3)
 ![GitHub last commit](https://img.shields.io/github/last-commit/R-iliya/NoxeBrowser?style=flat&color=4A2BE3)
 
-
-## NoxeBrowser is an advanced WebBrowser wrote in python
-
-> # NoxeBrowser: built for speed, built for simplicity, built for you.
-
-> “Simplicity is the soul of efficiency.”  
-> – Austin Freeman
-
-NoxeBrowser is wrote on python a fast paced modern language, achieving speed, performance and ease of use with PyQt5, functools, etc.
+NoxeBrowser is wrote on python a fast paced modern language, achieving speed, performance and ease of use.
 The code is also modularized and something around 1500 lines of code is cleanly put together, making everything way easier to contribute, which we're clearly looking forward to.
 
 
 NoxeBrowser is aiming to make a clean and secure environment for any user; Developer, Housewife, Gamer, Artist etc.
 
-Why NoxeBrowser Exists
+## Why NoxeBrowser Exists
 
 In a world full of browsers that spy on you, nag you with ads, and feel like they were built in 2008, NoxeBrowser was born to fix that. Not just to browse, but to experience the web on your own terms.
 
@@ -39,6 +31,9 @@ And most importantly? Because sometimes, you just want a browser that just works
 
 ![Screenshot 2](https://github.com/R-iliya/NoxeBrowser/blob/main/Screenshot-Light.png?raw=true)
 
+> “Simplicity is the soul of efficiency.”  
+> – Austin Freeman
+
 ## Some key features:
 
 #### Optimizations & Visuals
@@ -50,7 +45,7 @@ Browser supports Fullscreen through the F11 shortcut for ease of use, Fullscreen
 #### DevTools Support
 Browser supports DevTools through the F12 shortcut for debugging and inspections.
 
-#### Wide Shortcut Support
+#### Variety Shortcut Support
 Browser presents a variety of shortcuts for ease of access such as:
 * "F12" Toggle DevTools
 * "F11" Toggle Fullscreen
@@ -76,10 +71,7 @@ Browser blocks ad/tracker activities through network, and the blocklist includes
 #### Local Scheme For Pages
 For hiding the unpleasant path to browser's local pages, browser presents a "local://" scheme.
 
-#### Cache & Storage
-For ease of access and faster page loads, browser presents a cache and a storage folder inside the browser directory.
-
-#### Cache Cleanup
+#### Constant Cache Cleanup
 Whenever the "fp" file in cache reaches the size of 52.4 MB (Roughly aimed for 50MB) browser would clean it on startup.
 
 #### Persistent Previous Tab Order
@@ -91,13 +83,12 @@ Through JS, browser injects parameters for privacy and quality of life such as (
 #### Dark Mode Support
 For Windows users, browser checks if user is dark mode through the registry and yes, it would implement the Windows10+ immersive dark mode title bar And browser would auto dark mode the supported websites using JS.
 
-For Linux users, browser checks if user is dark mode through the os.environ.get("GTK_THEME", "") method to implement dark mode for supported websites.
+## Upcoming:
 
-For MacOS users, browser checks if user is dark mode through a subprocess.run() and if yes, it'd implement dark mode for supported websites.
+*  For Linux users, browser checks if user is dark mode through the os.environ.get("GTK_THEME", "") method to implement dark mode for supported websites.
 
-#### Download Manager
-Browser presents a clean download manager which is toggle able and persistent, cancel option and a load bar; Though Download manager is still under development for more advanced features.
+*  For MacOS users, browser checks if user is dark mode through a subprocess.run() and if yes, it'd implement dark mode for supported websites.
+---
 
-
-
+> # NoxeBrowser: built for speed, built for simplicity, built for you.
 
