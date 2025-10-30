@@ -7,17 +7,19 @@ main_script = "main.py"
 icon_path = os.path.join("core", "icon.ico")
 
 # Clean old builds
-for folder in ["build", "dist", f"{project_name}.spec"]:
-    if os.path.exists(folder):
-        if os.path.isdir(folder):
-            shutil.rmtree(folder)
+for target in ["build", "dist", f"{project_name}.spec"]:
+    if os.path.exists(target):
+        print(f"🧹 Removing old {target}...")
+        if os.path.isdir(target):
+            shutil.rmtree(target)
         else:
-            os.remove(folder)
+            os.remove(target)
 
 PyInstaller.__main__.run([
     main_script,
     "--noconfirm",
     "--windowed",
+    "--onefile",
     f"--icon={icon_path}",
     f"--name={project_name}",
     "--add-data=core;core",
