@@ -33,9 +33,6 @@ PyInstaller.__main__.run([
     "--hidden-import=PyQt5.QtWebEngineCore",
     "--hidden-import=PyQt5.QtWebChannel",
     # Only collect essential PyQt5 modules
-    "--collect-submodules=PyQt5.QtWidgets",
-    "--collect-submodules=PyQt5.QtGui",
-    "--collect-submodules=PyQt5.QtCore",
     "--collect-submodules=PyQt5.QtWebEngineWidgets",
     "--collect-submodules=PyQt5.QtWebEngineCore",
     "--collect-submodules=PyQt5.QtWebChannel",
@@ -47,9 +44,11 @@ PyInstaller.__main__.run([
 ])
 
 # Clear console and notify build completion
-os.system('cls' if os.name == 'nt' else 'clear')
+print("\n" + "="*50)
 print("✅ Build complete!")
 print(f"Check your dist folder for {project_name}.exe")
+print("="*50 + "\n")
+
 
 # Copy extra folders into dist
 dist_path = "dist"
@@ -62,7 +61,8 @@ for folder in extra_folders:
     print(f"📁 Copied {folder} into dist folder")
 
 # Ask for version name and create ZIP
-vname = input("Enter version name (e.g., v1.0): ").strip()
+print("📁 Enter version name (e.g., v1.0): ")
+vname = input(">>").strip()
 if vname:
     zip_filename = f"{project_name}_{vname}.zip"
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
