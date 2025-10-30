@@ -1,4 +1,4 @@
-![Banner](https://raw.githubusercontent.com/R-iliya/NoxeBrowser/refs/heads/main/banner.png?raw=true)
+![Banner](https://raw.githubusercontent.com/R-iliya/NoxeBrowser/refs/heads/main/banner-new.png?raw=true)
 
 # NoxeBrowser ![authoor](https://img.shields.io/badge/By:-R._iliya-green)
 
