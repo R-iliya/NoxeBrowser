@@ -43,7 +43,7 @@ PyInstaller.__main__.run([
     "--exclude-module=tkinter",
     "--exclude-module=pydoc",
     "--exclude-module=distutils",
-
+    "--strip",
 ])
 
 # Clear console and notify build completion
