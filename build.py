@@ -20,28 +20,27 @@ PyInstaller.__main__.run([
     "--noconfirm",
     "--windowed",
     "--onefile",
-    "--noupx",
+    "--noupx",  # faster startup
     f"--icon={icon_path}",
     f"--name={project_name}",
     "--add-data=core;core",
     "--add-data=img;img",
-    # 💥 Hidden imports to fix WebEngine errors
+    # Hidden imports for PyQt5 WebEngine
     "--hidden-import=PyQt5.QtWebEngineWidgets",
     "--hidden-import=PyQt5.QtWebEngineCore",
-    "--hidden-import=PyQt5.QtWebEngine",
     "--hidden-import=PyQt5.QtWebChannel",
-    "--hidden-import=PyQt5.QtWebEngineCore.QWebEngineProfile",
-    "--collect-all=PyQt5",
-    "--collect-all=PyQt5.QtWebEngineWidgets",
-    "--collect-all=PyQt5.QtWebEngineCore",
-    "--collect-all=PyQt5.QtWebEngine",
-    "--collect-all=PyQt5.QtNetwork",
-    "--collect-all=PyQt5.QtGui",
+    # Only collect essential PyQt5 modules
+    "--collect-submodules=PyQt5.QtWidgets",
+    "--collect-submodules=PyQt5.QtGui",
+    "--collect-submodules=PyQt5.QtCore",
+    "--collect-submodules=PyQt5.QtWebEngineWidgets",
+    "--collect-submodules=PyQt5.QtWebEngineCore",
+    "--collect-submodules=PyQt5.QtWebChannel",
 ])
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
-    print("\n✅ Build complete!")
+    print("✅ Build complete!")
 clear()
 
 print(f"Check your dist folder for {project_name}.exe")
