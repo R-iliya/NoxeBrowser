@@ -39,7 +39,18 @@ PyInstaller.__main__.run([
     "--collect-submodules=PyQt5.QtWebEngineWidgets",
     "--collect-submodules=PyQt5.QtWebEngineCore",
     "--collect-submodules=PyQt5.QtWebChannel",
+    "--exclude-module=tests",
+    "--exclude-module=tkinter",
+    "--exclude-module=pydoc",
+    "--exclude-module=distutils",
+    "--strip",
 ])
+
+# Notify build completion
+print("\n" + "="*50)
+print("✅ Build complete!")
+print(f"Check your dist folder for {project_name}.exe")
+print("="*50 + "\n")
 
 # Clear console and notify build completion
 os.system('cls' if os.name == 'nt' else 'clear')
