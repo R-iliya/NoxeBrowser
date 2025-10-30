@@ -41,11 +41,11 @@ options = [
     "--collect-all=PyQt5.QtGui",
 
     # 🧩 Add explicit WebEngine binaries & resources
-    "--add-binary", "C:\\Python312\\Lib\\site-packages\\PyQt5\\Qt5\\bin\\QtWebEngineProcess.exe;PyQt5\\Qt5\\bin",
-    "--add-data", "C:\\Python312\\Lib\\site-packages\\PyQt5\\Qt5\\resources;PyQt5\\Qt5\\resources",
-    "--add-data", "C:\\Python312\\Lib\\site-packages\\PyQt5\\Qt5\\translations;PyQt5\\Qt5\\translations",
-    "--add-data", "C:\\Python312\\Lib\\site-packages\\PyQt5\\Qt5\\resources\\qtwebengine_resources.pak;PyQt5\\Qt5\\resources",
-    "--add-data", "C:\\Python312\\Lib\\site-packages\\PyQt5\\Qt5\\resources\\qtwebengine_devtools_resources.pak;PyQt5\\Qt5\\resources",
+    "--add-binary", r"C:\Users\Asus\AppData\Roaming\Python\Python312\site-packages\PyQt5\Qt5\bin\QtWebEngineProcess.exe;PyQt5\Qt5\bin",
+    "--add-data", r"C:\Users\Asus\AppData\Roaming\Python\Python312\site-packages\PyQt5\Qt5\resources;PyQt5\Qt5\resources",
+    "--add-data", r"C:\Users\Asus\AppData\Roaming\Python\Python312\site-packages\PyQt5\Qt5\translations;PyQt5\Qt5\translations",
+    "--add-data", r"C:\Users\Asus\AppData\Roaming\Python\Python312\site-packages\PyQt5\Qt5\resources\qtwebengine_resources.pak;PyQt5\Qt5\resources",
+    "--add-data", r"C:\Users\Asus\AppData\Roaming\Python\Python312\site-packages\PyQt5\Qt5\resources\qtwebengine_devtools_resources.pak;PyQt5\Qt5\resources",
 ]
 
 # === Optional flags ===
