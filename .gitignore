@@ -1,6 +1,6 @@
 # PyInstaller / build artifacts
 /dist/
 /build/
-/LICENSE
-/README.md
+LICENSE
+README.md
 *.spec
