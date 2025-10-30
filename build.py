@@ -43,14 +43,8 @@ PyInstaller.__main__.run([
     "--exclude-module=tkinter",
     "--exclude-module=pydoc",
     "--exclude-module=distutils",
-    "--strip",
-])
 
-# Notify build completion
-print("\n" + "="*50)
-print("✅ Build complete!")
-print(f"Check your dist folder for {project_name}.exe")
-print("="*50 + "\n")
+])
 
 # Clear console and notify build completion
 os.system('cls' if os.name == 'nt' else 'clear')
