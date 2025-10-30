@@ -23,6 +23,7 @@ for target in ["build", "dist", f"{project_name}.spec"]:
 # === BUILD OPTIONS ===
 options = [
     main_script,
+    "--onedir",
     "--noconfirm",
     "--windowed",
     f"--icon={icon_path}",

@@ -27,6 +27,13 @@ from core.scheme import *
 from core.browser import *
 from core.mainwindow import *
 
+if getattr(sys, 'frozen', False):
+    # running as PyInstaller bundle
+    bundle_dir = sys._MEIPASS
+else:
+    bundle_dir = os.path.dirname(os.path.abspath(__file__))
+
+os.environ['QTWEBENGINEPROCESS_PATH'] = os.path.join(bundle_dir, 'PyQt5', 'Qt5', 'bin', 'QtWebEngineProcess.exe')
 
 if sys.platform.startswith("win"):
     import ctypes
