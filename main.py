@@ -45,6 +45,13 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
+print("\n[Browser Loaded]")
+print(f"GPU: {gpu.strip()}")
+print(f"QT_OPENGL: {os.environ.get('QT_OPENGL')}")
+print(f"Flags: {len(flags)} applied")
+print(OPT_RESULT,"\n")
+
 # ---- MAIN ENTRYPOINT ----
 if __name__ == "__main__":
     app = QApplication(sys.argv)

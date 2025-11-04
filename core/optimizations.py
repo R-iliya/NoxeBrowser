@@ -120,15 +120,17 @@ if "Intel" in gpu:
     os.environ["QT_OPENGL"] = "angle"
     print("Intel GPU detected → using ANGLE backend for stability")
 
+OPT_RESULT = ""
+
 try:
     # Boost current process priority to 'above normal'
     PROCESS_SET_INFORMATION = 0x0200
     PROCESS_QUERY_INFORMATION = 0x0400
     handle = ctypes.windll.kernel32.OpenProcess(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION, False, os.getpid())
     ctypes.windll.kernel32.SetPriorityClass(handle, 0x00008000)  # ABOVE_NORMAL_PRIORITY_CLASS
-    print("\nProcess priority set → Above normal\n")
+    OPT_RESULT = str("Process priority set → Above normal")
 except Exception as e:
-    print("\nPriority optimization skipped:", e,"\n")
+    OPT_RESULT = str("Priority optimization skipped:", e)
 
 try:
     os.environ["QT_COLOR_MODE"] = "srgb"
