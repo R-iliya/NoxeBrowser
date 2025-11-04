@@ -387,6 +387,10 @@ class MainWindow(QMainWindow):
         profile.settings().setAttribute(QWebEngineSettings.Accelerated2dCanvasEnabled, True)
         profile.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         profile.settings().setAttribute(QWebEngineSettings.FullScreenSupportEnabled, True)
+        
+        profile.setSpellCheckEnabled(False)
+        profile.setHttpAcceptLanguage("en-US,en;q=0.9")
+        profile.setHttpUserAgent(profile.httpUserAgent() + " +Brotli/HTTP2")
 
         view = QWebEngineView()
         view.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
