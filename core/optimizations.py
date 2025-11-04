@@ -79,7 +79,12 @@ except Exception:
 
 # QCoreApplication settings
 try:
-    QCoreApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
+    
+    try:
+        QCoreApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
+    except Exception:
+        QApplication.setAttribute(Qt.AA_UseOpenGLES)
+    
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     QCoreApplication.setAttribute(Qt.AA_UseSoftwareOpenGL, False)
     QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -87,6 +92,5 @@ try:
     QCoreApplication.setAttribute(Qt.WA_TranslucentBackground, True)
     # QApplication.setAttribute(Qt.AA_DontUseNativeMenuBar)
     # QApplication.setAttribute(Qt.AA_DontUseNativeDialogs)
-    QApplication.setAttribute(Qt.AA_UseOpenGLES)
 except Exception:
     pass
