@@ -8,8 +8,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import subprocess
-import winreg
-import ctypes
+if sys.platform.startswith("win"):
+    import winreg
+    import ctypes
 import json
 import sys
 import os
@@ -62,8 +63,6 @@ def animate_menu(menu):
     anim.setEasingCurve(QEasingCurve.OutQuad)
     anim.start(QPropertyAnimation.DeleteWhenStopped)
     return anim
-
-from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
 
 from core.blocker import *
 
@@ -287,9 +286,9 @@ def set_privacy_overrides(profile, dark_mode=True):
 
     script = QWebEngineScript()
     script.setName("privacyOverrides")
-    script.setInjectionPoint(QWebEngineScript.DocumentReady)
+    script.setInjectionPoint(QWebEngineScript.DocumentCreation)
     script.setRunsOnSubFrames(False)
-    script.setWorldId(QWebEngineScript.MainWorld)
+    script.setWorldId(QWebEngineScript.ApplicationWorld)
     script.setSourceCode(js)
 
     scripts = profile.scripts()
