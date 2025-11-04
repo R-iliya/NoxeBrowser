@@ -287,9 +287,9 @@ def set_privacy_overrides(profile, dark_mode=True):
 
     script = QWebEngineScript()
     script.setName("privacyOverrides")
-    script.setInjectionPoint(QWebEngineScript.DocumentCreation)
+    script.setInjectionPoint(QWebEngineScript.DocumentReady)
     script.setRunsOnSubFrames(False)
-    script.setWorldId(QWebEngineScript.ApplicationWorld)
+    script.setWorldId(QWebEngineScript.MainWorld)
     script.setSourceCode(js)
 
     scripts = profile.scripts()
