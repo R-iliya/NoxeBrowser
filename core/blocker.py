@@ -1,27 +1,13 @@
 # --- Blocker & Interceptor ---
 print("4 Running Blocker")
-# importing required libraries
-from PyQt5.QtWebEngineWidgets import *
-from PyQt5.QtPrintSupport import *
-from functools import partial
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-import subprocess
-import winreg
-import ctypes
-import json
-import sys
-import os
-from PyQt5.QtWebEngineCore import (
-    QWebEngineUrlRequestInterceptor,
-    QWebEngineUrlSchemeHandler,
-    QWebEngineUrlScheme,
-)
-
+from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
+from urllib.parse import urlparse
 
 class Blocker(QWebEngineUrlRequestInterceptor):
-    BLOCK_LIST = [
+    def __init__(self):
+        super().__init__()
+        # Precompile the blocklist as a set of domains for O(1) lookups
+        self.blocked_domains = {
         # Original common ad networks
         "doubleclick.net", "googlesyndication.com", "adservice.google.com",
         "googletagmanager.com", "googletagservices.com", "taboola.com",
@@ -68,9 +54,10 @@ class Blocker(QWebEngineUrlRequestInterceptor):
         "udcm.yahoo.com", "app.bugsnag.com", "app.getsentry.com",
         "adtech.yahooinc.com", "iot-logser.realme.com", "mouseflow.com",
         "ads.linkedin.com", "careers.hotjar.com"
-    ]
+        }
 
     def interceptRequest(self, info):
         url = info.requestUrl().toString()
-        if any(b in url for b in self.BLOCK_LIST):
+        domain = urlparse(url).hostname or ""
+        if any(blocked in domain for blocked in self.blocked_domains):
             info.block(True)
