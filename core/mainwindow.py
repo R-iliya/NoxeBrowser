@@ -411,10 +411,6 @@ class MainWindow(QMainWindow):
         delete_30days_action.triggered.connect(lambda: self.delete_history_days(30))
         menu.addAction(delete_30days_action)
 
-        # Apply visual effects
-        self._menu_anim = apply_blur_transparent(menu)
-        self._menu_anim = animate_menu(menu)
-
         # Show menu
         menu.exec_(self.history_list.mapToGlobal(pos))
         
@@ -630,9 +626,6 @@ class MainWindow(QMainWindow):
         delete_action = QAction("Delete", self)
         delete_action.triggered.connect(lambda: self.delete_bookmark(item))
         menu.addAction(delete_action)
-        self._menu_anim = animate_menu(menu)
-        self._menu_anim = apply_blur_transparent(menu)
-        
         menu.exec_(self.bookmarks_list.mapToGlobal(pos))
 
     def delete_bookmark(self, item):
