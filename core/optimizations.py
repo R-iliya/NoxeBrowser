@@ -71,6 +71,9 @@ try:
         "--disable-domain-reliability",
         "--disable-component-update",
         "--disable-features=UseSkiaRenderer,CalculateNativeWinOcclusion",
+        "--prefetch-startup=1",
+        "--enable-prefetch-scripts",
+        "--enable-speculative-service-worker-startup",
     ]
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = " ".join(flags)
 except Exception:
