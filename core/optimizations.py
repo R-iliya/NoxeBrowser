@@ -63,6 +63,14 @@ try:
         "--enable-native-gpu-memory-buffers",
         "--enable-vulkan",
         "--enable-webgl2-compute-context",
+        "--media-cache-size=157286400",
+        "--enable-main-frame-before-activation",
+        "--no-pings",
+        "--disable-notifications",
+        "--disable-breakpad",
+        "--disable-domain-reliability",
+        "--disable-component-update",
+        "--disable-features=UseSkiaRenderer,CalculateNativeWinOcclusion",
     ]
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = " ".join(flags)
 except Exception:
