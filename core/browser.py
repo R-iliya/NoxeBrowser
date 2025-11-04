@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import subprocess
+import winreg
+import ctypes
 import json
 import sys
 import os
@@ -17,10 +19,6 @@ from PyQt5.QtWebEngineCore import (
     QWebEngineUrlScheme,
 )
 
-if sys.platform.startswith("win"):
-    import winreg
-    import ctypes
-    
 def apply_blur_transparent(menu: QMenu):
     menu.setAttribute(Qt.WA_TranslucentBackground, True)
     menu.setStyleSheet("""
@@ -64,6 +62,8 @@ def animate_menu(menu):
     anim.setEasingCurve(QEasingCurve.OutQuad)
     anim.start(QPropertyAnimation.DeleteWhenStopped)
     return anim
+
+from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
 
 from core.blocker import *
 
