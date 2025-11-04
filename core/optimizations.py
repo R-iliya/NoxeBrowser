@@ -19,6 +19,12 @@ from PyQt5.QtWebEngineCore import (
     QWebEngineUrlScheme,
 )
 
+
+# --- DebugMode, Turn off unless debugging. --- 
+# --- Set to True manually for diagnostics. --- 
+DEBUG_MODE = False
+
+
 # os settings
 try:
     os.environ["QT_LOGGING_RULES"] = "*=false"
@@ -135,3 +141,7 @@ try:
     QCoreApplication.setAttribute(Qt.AA_DontCheckOpenGLContextThreadAffinity)
 except Exception:
     pass
+
+if DEBUG_MODE:
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-logging --v=1"
+    print("[DEBUG] Chromium logging enabled")
