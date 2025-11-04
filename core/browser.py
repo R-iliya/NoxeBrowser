@@ -433,6 +433,7 @@ class DownloadItem(QWidget):
         layout.addWidget(self.cancel_btn)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+        print("testing;")
         self.setLayout(layout)
 
         download.downloadProgress.connect(self.on_progress)

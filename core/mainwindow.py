@@ -517,6 +517,12 @@ class MainWindow(QMainWindow):
             qurl = QUrl(self.local_home)
         browser.setUrl(qurl)
 
+        container = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(browser)
+        container.setLayout(layout)
+        print("setting layout;")
 
 
         i = self.tabs.addTab(browser, label)
