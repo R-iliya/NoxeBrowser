@@ -21,40 +21,6 @@ if sys.platform.startswith("win"):
     import winreg
     import ctypes
 
-def apply_blur_transparent(menu: QMenu):
-    menu.setAttribute(Qt.WA_TranslucentBackground, True)
-    menu.setStyleSheet("""
-        QMenu {
-            background: rgba(45, 45, 45, 220);
-            border-radius: 10px;
-            padding: 6px;
-        }
-        QMenu::item {
-            padding: 4px 30px 4px 10px;
-            color: #f0f0f0;
-            border-radius: 6px;
-        }
-        QMenu::item:selected {
-            background: rgba(70, 70, 70, 180);
-        }
-    """)
-    # Optional fade-in animation
-    menu.setWindowOpacity(0.0)
-    anim = QPropertyAnimation(menu, b"windowOpacity")
-    anim.setDuration(120)
-    anim.setStartValue(0.0)
-    anim.setEndValue(1.0)
-    anim.setEasingCurve(QEasingCurve.OutQuad)
-    anim.start(QPropertyAnimation.DeleteWhenStopped)
-    return anim
-
-original_show = QMenu.show
-def show_with_blur(self):
-    apply_blur_transparent(self)
-    original_show(self)
-
-QMenu.show = show_with_blur
-
 def animate_menu(menu):
     menu.setWindowOpacity(0.0)
     anim = QPropertyAnimation(menu, b"windowOpacity")
