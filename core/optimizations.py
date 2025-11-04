@@ -96,3 +96,9 @@ try:
     # QApplication.setAttribute(Qt.AA_DontUseNativeDialogs)
 except Exception:
     pass
+
+# dynamic gpu flags
+gpu = subprocess.getoutput('wmic path win32_VideoController get name')
+if "Intel" in gpu:
+    os.environ["QT_OPENGL"] = "angle"
+    print("Intel GPU detected → using ANGLE backend for stability")
