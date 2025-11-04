@@ -126,3 +126,9 @@ try:
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-color-correct-rendering --force-color-profile=srgb"
 except Exception:
     pass
+
+try:
+    QCoreApplication.setAttribute(Qt.AA_CompressHighFrequencyEvents, False)
+    QCoreApplication.setAttribute(Qt.AA_DontCheckOpenGLContextThreadAffinity)
+except Exception:
+    pass
