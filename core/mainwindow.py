@@ -367,6 +367,11 @@ class MainWindow(QMainWindow):
             app_id = u"noxe.browser.1.6"
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
 
+        print("Central widget:", self.centralWidget())
+        print("Tabs geometry:", self.tabs.geometry())
+        if self.tabs.currentWidget():
+            print("Current tab widget geometry:", self.tabs.currentWidget().geometry())
+
         profile = QWebEngineProfile.defaultProfile()
         profile.setCachePath("./browser/cache")
         profile.setPersistentStoragePath("./browser/storage")
