@@ -59,8 +59,6 @@ try:
         "--enable-native-gpu-memory-buffers",
         "--enable-vulkan",
         "--enable-webgl2-compute-context",
-        "--enable-zero-copy",
-
     ]
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = " ".join(flags)
 except Exception:
@@ -79,7 +77,7 @@ except Exception:
 
 # QCoreApplication settings
 try:
-    
+
     try:
         QCoreApplication.setAttribute(Qt.AA_UseDesktopOpenGL)
     except Exception:
