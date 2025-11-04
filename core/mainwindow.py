@@ -207,7 +207,7 @@ class MainWindow(QMainWindow):
             blocker = Blocker()
             profile.setRequestInterceptor(blocker)
         except Exception:
-            pass
+            print("Blocker Interceptor Failed;")
 
         self.local_scheme_handler = LocalScheme()
         profile.installUrlSchemeHandler(b"local", self.local_scheme_handler)
@@ -372,7 +372,6 @@ class MainWindow(QMainWindow):
         if self.tabs.currentWidget():
             print("Current tab widget geometry:", self.tabs.currentWidget().geometry())
 
-        profile = QWebEngineProfile.defaultProfile()
         profile.setCachePath("./browser/cache")
         profile.setPersistentStoragePath("./browser/storage")
         profile.setHttpCacheType(QWebEngineProfile.DiskHttpCache)
