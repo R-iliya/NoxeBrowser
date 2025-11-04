@@ -120,3 +120,9 @@ try:
     print("\nProcess priority set → Above normal\n")
 except Exception as e:
     print("\nPriority optimization skipped:", e,"\n")
+
+try:
+    os.environ["QT_COLOR_MODE"] = "srgb"
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-color-correct-rendering --force-color-profile=srgb"
+except Exception:
+    pass
