@@ -393,6 +393,10 @@ class MainWindow(QMainWindow):
         view.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
         view.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
 
+        QTimer.singleShot(200, lambda: self.tabs.currentWidget().resize(
+        self.tabs.currentWidget().parentWidget().size()))
+
+
     # --- history context menu ---
     def history_context_menu(self, pos):
         item = self.history_list.itemAt(pos)
@@ -510,6 +514,8 @@ class MainWindow(QMainWindow):
         browser.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, True)
         browser.settings().setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
         browser.settings().setAttribute(QWebEngineSettings.AutoLoadImages, True)
+        browser.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        browser.setContentsMargins(0, 0, 0, 0)
 
         browser.page().runJavaScript("""
             document.documentElement.style.scrollBehavior = 'smooth';
@@ -518,7 +524,7 @@ class MainWindow(QMainWindow):
 
         browser.iconChanged.connect(lambda icon, browser=browser: self.update_tab_icon(browser, icon))
 
-        if qurl is None:
+        if qurl is None or isinstance(qurl, bool):
             qurl = QUrl(self.local_home)
         browser.setUrl(qurl)
 
@@ -527,6 +533,10 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(browser)
         container.setLayout(layout)
+
+        browser.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        browser.setMinimumSize(0, 0)
+        browser.setContentsMargins(0, 0, 0, 0)
 
         i = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(i)
