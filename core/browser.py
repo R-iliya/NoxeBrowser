@@ -8,9 +8,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import subprocess
-if sys.platform.startswith("win"):
-    import winreg
-    import ctypes
 import json
 import sys
 import os
@@ -20,6 +17,10 @@ from PyQt5.QtWebEngineCore import (
     QWebEngineUrlScheme,
 )
 
+if sys.platform.startswith("win"):
+    import winreg
+    import ctypes
+    
 def apply_blur_transparent(menu: QMenu):
     menu.setAttribute(Qt.WA_TranslucentBackground, True)
     menu.setStyleSheet("""
