@@ -109,6 +109,6 @@ try:
     PROCESS_QUERY_INFORMATION = 0x0400
     handle = ctypes.windll.kernel32.OpenProcess(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION, False, os.getpid())
     ctypes.windll.kernel32.SetPriorityClass(handle, 0x00008000)  # ABOVE_NORMAL_PRIORITY_CLASS
-    print("Process priority set → Above normal")
+    print("\nProcess priority set → Above normal\n")
 except Exception as e:
-    print("Priority optimization skipped:", e)
+    print("\nPriority optimization skipped:", e,"\n")
