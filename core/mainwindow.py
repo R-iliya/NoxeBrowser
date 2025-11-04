@@ -522,13 +522,12 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(browser)
         container.setLayout(layout)
-        print("setting layout;")
-
 
         i = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(i)
 
         # --- CONNECT SIGNALS ---
+        browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.title()))
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
         browser.loadFinished.connect(lambda ok, browser=browser: self.track_history(browser))
         browser.page().titleChanged.connect(lambda title, browser=browser: self.update_tab_title(title, browser))
