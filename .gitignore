@@ -1,4 +1,9 @@
-# PyInstaller / build artifacts
 /dist/
 /build/
 *.spec
+settings.json
+tabs.json
+/browser/
+core/bookmarks.json
+core/history.json
+core/__pycache__/
