@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import subprocess
+import platform
 import winreg
 import ctypes
 import json
@@ -115,10 +116,28 @@ except Exception:
     pass
 
 # dynamic gpu flags
-gpu = subprocess.getoutput('wmic path win32_VideoController get name')
+gpu = "Unknown GPU"
+if platform.system() == "Windows":
+    try:
+        # Try WMIC first
+        gpu = subprocess.getoutput('wmic path win32_VideoController get name').strip().replace("\n\n", ", ")
+        if not gpu or "not recognized" in gpu:
+            raise Exception("WMIC failed")
+    except Exception:
+        try:
+            # Fallback to Python WMI
+            import wmi
+            c = wmi.WMI()
+            gpu_list = [g.Name for g in c.Win32_VideoController()]
+            gpu = ", ".join(gpu_list)
+        except Exception:
+            gpu = "Unknown GPU"
+
 if "Intel" in gpu:
     os.environ["QT_OPENGL"] = "angle"
     print("Intel GPU detected → using ANGLE backend for stability")
+
+print(f"[GPU detected] {gpu}")
 
 OPT_RESULT = ""
 
