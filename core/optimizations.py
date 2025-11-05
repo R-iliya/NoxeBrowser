@@ -112,17 +112,18 @@ try:
 except Exception:
     pass
 
-# dynamic gpu flags
+# --- dynamic GPU detection & backend ---
 gpu = "Unknown GPU"
+backend = "desktop"  # default
+
 if platform.system() == "Windows":
     try:
-        # Try WMIC first
+        # WMIC first
         gpu = subprocess.getoutput('wmic path win32_VideoController get name').strip().replace("\n\n", ", ")
         if not gpu or "not recognized" in gpu:
             raise Exception("WMIC failed")
     except Exception:
         try:
-            # Fallback to Python WMI
             import wmi
             c = wmi.WMI()
             gpu_list = [g.Name for g in c.Win32_VideoController()]
@@ -130,11 +131,25 @@ if platform.system() == "Windows":
         except Exception:
             gpu = "Unknown GPU"
 
-if "Intel" in gpu:
-    os.environ["QT_OPENGL"] = "angle"
+# Detect GPU type and assign Qt backend
+gpu_lower = gpu.lower()
+if "intel" in gpu_lower:
+    backend = "angle"  # ANGLE is best for Intel integrated GPUs
     print("Intel GPU detected → using ANGLE backend for stability")
+elif "nvidia" in gpu_lower:
+    backend = "desktop"  # NVIDIA can handle desktop OpenGL or Vulkan
+    print("NVIDIA GPU detected → using Desktop OpenGL backend")
+elif "amd" in gpu_lower or "radeon" in gpu_lower:
+    backend = "desktop"  # AMD also prefers desktop OpenGL
+    print("AMD GPU detected → using Desktop OpenGL backend")
+else:
+    backend = "software"  # fallback for unknown GPUs
+    print("Unknown or generic GPU detected → using Software backend")
 
-print(f"[GPU detected] {gpu}")
+# Apply backend
+os.environ["QT_OPENGL"] = backend
+print(f"[GPU detected] {gpu} → QT_OPENGL set to {backend}")
+
 
 OPT_RESULT = ""
 
