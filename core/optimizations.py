@@ -14,6 +14,7 @@ import ctypes
 import json
 import sys
 import os
+import re
 from PyQt5.QtWebEngineCore import (
     QWebEngineUrlRequestInterceptor,
     QWebEngineUrlSchemeHandler,
@@ -118,16 +119,17 @@ backend = "desktop"  # default
 
 if platform.system() == "Windows":
     try:
-        # WMIC first
-        gpu = subprocess.getoutput('wmic path win32_VideoController get name').strip().replace("\n\n", ", ")
-        if not gpu or "not recognized" in gpu:
-            raise Exception("WMIC failed")
+        output = subprocess.getoutput('wmic path win32_VideoController get name /format:list')
+        matches = re.findall(r"Name=(.*)", output)
+        if matches:
+            gpu = ", ".join(matches)
+        else:
+            raise Exception("WMIC parse failed")
     except Exception:
         try:
             import wmi
             c = wmi.WMI()
-            gpu_list = [g.Name for g in c.Win32_VideoController()]
-            gpu = ", ".join(gpu_list)
+            gpu = ", ".join([g.Name for g in c.Win32_VideoController()])
         except Exception:
             gpu = "Unknown GPU"
 
@@ -138,6 +140,12 @@ if "intel" in gpu_lower:
     print("Intel GPU detected → using ANGLE backend for stability")
 elif "nvidia" in gpu_lower:
     backend = "desktop"  # NVIDIA can handle desktop OpenGL or Vulkan
+
+    os.environ["QT_OPENGL"] = "desktop"
+    os.environ["QT_ANGLE_PLATFORM"] = "d3d11"
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --gpu-preferences=KMaxPerformance"
+
     print("NVIDIA GPU detected → using Desktop OpenGL backend")
 elif "amd" in gpu_lower or "radeon" in gpu_lower:
     backend = "desktop"  # AMD also prefers desktop OpenGL
@@ -150,6 +158,22 @@ else:
 os.environ["QT_OPENGL"] = backend
 print(f"[GPU detected] {gpu} → QT_OPENGL set to {backend}")
 
+try:
+    import ctypes
+    ctypes.windll.kernel32.SetDllDirectoryW(None)  # prevent driver lookup issues
+    # Tell Windows we want the discrete GPU
+    ctypes.windll.user32.SetProcessDpiAwarenessContext(-4)  # Per-monitor DPI awareness (optional)
+    ctypes.windll.kernel32.SetEnvironmentVariableW("QTWEBENGINE_CHROMIUM_FLAGS", os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] + " --use-angle=gl")
+    ctypes.windll.kernel32.SetEnvironmentVariableW("QT_OPENGL", "desktop")
+except Exception:
+    pass
+
+# Also tell NVIDIA Optimus this app should use the high-performance GPU:
+try:
+    import ctypes
+    nvapi = ctypes.WinDLL("nvapi64.dll")
+except Exception:
+    pass
 
 OPT_RESULT = ""
 
