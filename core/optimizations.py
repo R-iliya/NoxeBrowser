@@ -39,9 +39,9 @@ try:
     os.environ["QTWEBENGINE_REMOTE_DEBUGGING"] = "0"  # disables unneeded port listener
 
     flags = [
+        "--ignore-gpu-blocklist",
         "--enable-gpu-rasterization",
         "--enable-zero-copy",
-        "--ignore-gpu-blocklist",
         "--enable-native-gpu-memory-buffers",
         "--enable-accelerated-video-decode",
         "--enable-features=VaapiVideoDecoder,ThreadedCompositing,WebRTCPipeWireCapturer",
