@@ -76,6 +76,8 @@ try:
         "--disable-domain-reliability",
         "--disable-component-update",
         "--disable-features=UseSkiaRenderer,CalculateNativeWinOcclusion",
+
+        "--enable-hardware-overlays",
     ]
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = " ".join(flags)
 except Exception:
