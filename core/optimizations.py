@@ -40,7 +40,6 @@ try:
 
     flags = [
         "--ignore-gpu-blocklist",
-        "--enable-gpu-rasterization",
         "--enable-zero-copy",
         "--enable-native-gpu-memory-buffers",
         "--enable-accelerated-video-decode",
@@ -138,6 +137,8 @@ gpu_lower = gpu.lower()
 if "intel" in gpu_lower:
     backend = "angle"  # ANGLE is best for Intel integrated GPUs
     print("Intel GPU detected → using ANGLE backend for stability")
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-gpu-rasterization --ignore-gpu-blocklist"
+
 elif "nvidia" in gpu_lower:
     backend = "desktop"  # NVIDIA can handle desktop OpenGL or Vulkan
 
@@ -145,11 +146,15 @@ elif "nvidia" in gpu_lower:
     os.environ["QT_ANGLE_PLATFORM"] = "d3d11"
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --gpu-preferences=KMaxPerformance"
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-gpu-rasterization --ignore-gpu-blocklist"
 
     print("NVIDIA GPU detected → using Desktop OpenGL backend")
+
 elif "amd" in gpu_lower or "radeon" in gpu_lower:
     backend = "desktop"  # AMD also prefers desktop OpenGL
     print("AMD GPU detected → using Desktop OpenGL backend")
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-gpu-rasterization --ignore-gpu-blocklist"
+
 else:
     backend = "software"  # fallback for unknown GPUs
     print("Unknown or generic GPU detected → using Software backend")
