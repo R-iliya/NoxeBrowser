@@ -134,12 +134,7 @@ if platform.system() == "Windows":
 
 # Detect GPU type and assign Qt backend
 gpu_lower = gpu.lower()
-if "intel" in gpu_lower:
-    backend = "angle"  # ANGLE is best for Intel integrated GPUs
-    print("Intel GPU detected → using ANGLE backend for stability")
-    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-gpu-rasterization --ignore-gpu-blocklist"
-
-elif "nvidia" in gpu_lower:
+if "nvidia" in gpu_lower:
     backend = "desktop"  # NVIDIA can handle desktop OpenGL or Vulkan
 
     os.environ["QT_OPENGL"] = "desktop"
@@ -153,6 +148,11 @@ elif "nvidia" in gpu_lower:
 elif "amd" in gpu_lower or "radeon" in gpu_lower:
     backend = "desktop"  # AMD also prefers desktop OpenGL
     print("AMD GPU detected → using Desktop OpenGL backend")
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-gpu-rasterization --ignore-gpu-blocklist"
+
+elif "intel" in gpu_lower:
+    backend = "angle"  # ANGLE is best for Intel integrated GPUs
+    print("Intel GPU detected → using ANGLE backend for stability")
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-gpu-rasterization --ignore-gpu-blocklist"
 
 else:
