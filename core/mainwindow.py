@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
 
     class WebEnginePage(QWebEnginePage):
         def mouseReleaseEvent(self, event):
-            if event.button() == Qt.MiddleButton and hasattr(self, "main_window") and self.main_window:
+            if event.button() == Qt.MiddleButton and hasattr(self, "main_window") and enumerate:
                 try:
                     self.main_window.add_new_tab(self.url())
                 except Exception:

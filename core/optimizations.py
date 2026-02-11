@@ -113,7 +113,7 @@ except Exception:
     pass
 
 # --- dynamic GPU detection & backend ---
-gpu = "Unknown GPU"
+gpu = "Unknown GPU"  # default
 backend = "desktop"  # default
 
 if platform.system() == "Windows":
