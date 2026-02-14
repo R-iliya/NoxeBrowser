@@ -26,10 +26,6 @@ from core.browser import *
 class MainWindow(QMainWindow):
 
     class WebEnginePage(QWebEnginePage):
-
-        def mousePressEvent(self, event):
-            super().mousePressEvent(event)
-            
         def __init__(self, parent=None, main_window=None):
             super().__init__(parent)
             self.main_window = main_window
@@ -457,14 +453,6 @@ class MainWindow(QMainWindow):
         
         profile.setSpellCheckEnabled(False)
         profile.setHttpAcceptLanguage("en-US,en;q=0.9")
-        profile.setHttpUserAgent(profile.httpUserAgent())
-
-        view = QWebEngineView()
-        view.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
-        view.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
-
-        QTimer.singleShot(200, lambda: self.tabs.currentWidget().resize(
-        self.tabs.currentWidget().parentWidget().size()))
 
 
     # --- history context menu ---
@@ -508,13 +496,16 @@ class MainWindow(QMainWindow):
     def delete_history_days(self, days):
         try:
             from datetime import datetime, timedelta
-            cutoff = datetime.now() - timedelta(days=days)
-            # Keep items older than cutoff (i.e. delete the last `days` entries)
-            self.history = [h for h in self.history if "timestamp" in h and datetime.fromisoformat(h["timestamp"]) < cutoff]
+            now = datetime.now()
+            cutoff = now - timedelta(days=days)
+            self.history = [
+                h for h in self.history
+                if "timestamp" not in h or datetime.fromisoformat(h["timestamp"]) <= cutoff
+            ]
             self.save_history()
             self.update_history_list()
         except Exception as e:
-            print("delete_history_days failed:", e)
+            print(f"delete_history_days({days}) failed: {e}")
 
         
     # --- SETTINGS PERSISTENCE ---
@@ -577,7 +568,6 @@ class MainWindow(QMainWindow):
         browser.setPage(page)
         page.featurePermissionRequested.connect(page.handle_feature_permission_request)
         
-        browser.setParent(self)
         browser.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         browser.settings().setAttribute(QWebEngineSettings.FullScreenSupportEnabled, True)
         browser.settings().setAttribute(QWebEngineSettings.JavascriptCanOpenWindows, True)
@@ -603,10 +593,6 @@ class MainWindow(QMainWindow):
         # layout.setContentsMargins(0, 0, 0, 0)
         # layout.addWidget(browser)
         # container.setLayout(layout)
-
-        browser.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        browser.setMinimumSize(0, 0)
-        browser.setContentsMargins(0, 0, 0, 0)
 
         i = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(i)
@@ -874,15 +860,19 @@ class MainWindow(QMainWindow):
 
     def toggle_devtools(self):
         browser = self.tabs.currentWidget()
-        browser.page().runJavaScript("console.log('prefers-color-scheme dark:', window.matchMedia('(prefers-color-scheme: dark)').matches);")
-        if hasattr(browser, 'devtools') and browser.devtools.isVisible():
-            browser.devtools.close()
-            return
-        else:
-            browser.devtools = QWebEngineView()
-        
-        browser.page().setDevToolsPage(browser.devtools.page())
-        browser.devtools.show()
+        if hasattr(browser, 'devtools'):
+            if browser.devtools.isVisible():
+                browser.devtools.close()
+                return
+            else:
+                browser.devtools.show()
+                return
+
+        # First time
+        dev_view = QWebEngineView()
+        browser.page().setDevToolsPage(dev_view.page())
+        dev_view.show()
+        browser.devtools = dev_view  # still keep reference
         
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
