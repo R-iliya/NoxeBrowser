@@ -1,6 +1,7 @@
 # --- Main Code ---
 print("1 Running Main code")
 # importing required libraries
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *
 from functools import partial

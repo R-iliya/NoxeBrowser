@@ -1,6 +1,7 @@
 # --- MainWindow & Essentials ---
 print("7 Running MainWindow")
 # importing required libraries
+from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *
 from functools import partial
@@ -25,13 +26,6 @@ from core.browser import *
 class MainWindow(QMainWindow):
 
     class WebEnginePage(QWebEnginePage):
-        def mouseReleaseEvent(self, event):
-            if event.button() == Qt.MiddleButton and hasattr(self, "main_window") and enumerate:
-                try:
-                    self.main_window.add_new_tab(self.url())
-                except Exception:
-                    self.main_window.add_new_tab(QUrl("about:blank"))
-            super().mouseReleaseEvent(event)
 
         def mousePressEvent(self, event):
             super().mousePressEvent(event)
@@ -192,22 +186,14 @@ class MainWindow(QMainWindow):
         # profiles for downloads
         profile = QWebEngineProfile.defaultProfile()
         profile.downloadRequested.connect(self.handle_download)
-        try:
-            interceptor = Blocker()
-            if hasattr(profile, "setUrlRequestInterceptor"):
-                profile.setUrlRequestInterceptor(Blocker())
-            elif hasattr(profile, "setRequestInterceptor"):
-                profile.setRequestInterceptor(Blocker())
-            else:
-                print("Warning: Could not set request interceptor on profile.")
-        except Exception:
-            pass
 
-        try:
-            blocker = Blocker()
-            profile.setRequestInterceptor(blocker)
-        except Exception:
-            print("Blocker Interceptor Failed;")
+        interceptor = Blocker()
+        if hasattr(profile, 'setUrlRequestInterceptor'):
+            profile.setUrlRequestInterceptor(interceptor)
+        elif hasattr(profile, 'setRequestInterceptor'):
+            profile.setRequestInterceptor(interceptor)
+        else:
+            print("No request interceptor method available — adblock dead")
 
         self.local_scheme_handler = LocalScheme()
         profile.installUrlSchemeHandler(b"local", self.local_scheme_handler)
@@ -294,6 +280,89 @@ class MainWindow(QMainWindow):
         stop_btn.triggered.connect(lambda: self.tabs.currentWidget().stop())
         self.navtb.addAction(stop_btn)
 
+        # AI Chat Dock
+        self.ai_dock = QDockWidget("Noxe AI Assistant", self)
+        self.ai_dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+        self.ai_dock.setFixedWidth(350)
+        self.ai_dock.setStyleSheet("""
+            QDockWidget {
+                background-color: #1e1e2f;
+                border: 2px solid #3a3a5a;
+                border-radius: 10px;
+                /* soft shadow glow */
+                box-shadow: 0px 0px 15px rgba(75, 139, 245, 0.4);
+            }
+        """)
+        
+
+
+        self.ai_widget = QWidget()
+        self.ai_layout = QVBoxLayout()
+        self.ai_layout.setSpacing(5)
+        self.ai_widget.setLayout(self.ai_layout)
+
+        # Scroll area for chat bubbles
+        self.chat_scroll = QScrollArea()
+        self.chat_scroll.setWidgetResizable(True)
+        self.chat_container = QWidget()
+        self.chat_layout = QVBoxLayout()
+        self.chat_layout.setAlignment(Qt.AlignTop)
+        self.chat_container.setLayout(self.chat_layout)
+        self.chat_scroll.setWidget(self.chat_container)
+
+        self.ai_input = QLineEdit()
+        self.ai_input.setPlaceholderText("Ask NoxeAI…")
+        self.ai_input.returnPressed.connect(self.send_ai_query)
+
+        self.ai_layout.addWidget(self.chat_scroll)
+        self.ai_layout.addWidget(self.ai_input)
+
+        self.ai_dock.setWidget(self.ai_widget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.ai_dock)
+        self.ai_dock.setVisible(True)
+
+        # Toggle AI Button
+        toggle_ai_btn = QAction("AI", self)
+        toggle_ai_btn.setCheckable(True)
+        toggle_ai_btn.setChecked(True)
+        toggle_ai_btn.triggered.connect(lambda checked: self.ai_dock.setVisible(checked))
+        self.navtb.addAction(toggle_ai_btn)
+
+        self.ai_dock.setTitleBarWidget(QWidget())
+        title = QLabel("NoxeAI 🌀")
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("""
+            QLabel {
+                color: #4b8bf5;
+                font-weight: bold;
+                font-size: 14pt;
+                text-shadow: 1px 1px 4px #3a3a5a;
+            }
+        """)
+        self.ai_input.setStyleSheet("""
+            QLineEdit {
+                padding: 6px;
+                border-radius: 10px;
+                border: 2px solid #3a3a5a;
+                background-color: #2b2b3b;
+                color: #eee;
+            }
+            QLineEdit:focus {
+                border: 2px solid #4b8bf5;
+                background-color: #353545;
+            }
+        """)
+
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(title)
+        header_layout.setContentsMargins(5, 2, 5, 2)
+        header_widget = QWidget()
+        header_widget.setLayout(header_layout)
+        self.ai_dock.setTitleBarWidget(header_widget)
+
+
+
+
         # Download Manager Dock
         self.download_dock = QDockWidget("Downloads", self)
         self.download_dock.setAllowedAreas(Qt.BottomDockWidgetArea | Qt.RightDockWidgetArea)
@@ -346,6 +415,10 @@ class MainWindow(QMainWindow):
         self.bm_action.toggled.connect(self.toggle_bookmarks)
         self.history_action.toggled.connect(self.toggle_history)
 
+        self.network_manager = QNetworkAccessManager(self)
+        self.network_manager.finished.connect(self.handle_ai_response)
+
+
         # load tabs
         load_tab_order(self)
 
@@ -357,9 +430,8 @@ class MainWindow(QMainWindow):
         self.load_settings()
 
         # show window
-        self.show()
-        self.showMaximized()
         self.setWindowTitle("Noxe Browser")
+        self.showMaximized()
         icon = QIcon("core/icon.ico")
         self.setWindowIcon(icon)
         if sys.platform.startswith("win"):
@@ -526,11 +598,11 @@ class MainWindow(QMainWindow):
             qurl = QUrl(self.local_home)
         browser.setUrl(qurl)
 
-        container = QWidget()
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(browser)
-        container.setLayout(layout)
+        # container = QWidget()
+        # layout = QVBoxLayout()
+        # layout.setContentsMargins(0, 0, 0, 0)
+        # layout.addWidget(browser)
+        # container.setLayout(layout)
 
         browser.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         browser.setMinimumSize(0, 0)
@@ -666,6 +738,131 @@ class MainWindow(QMainWindow):
         # always overwrite bookmarks.json, even if empty
         with open(self.bookmarks_file, "w", encoding="utf-8") as f:
             json.dump(self.bookmarks, f, indent=2, ensure_ascii=False)
+
+
+
+    def send_ai_query(self):
+        prompt = self.ai_input.text().strip()
+        if not prompt:
+            return
+
+        self.ai_input.clear()
+        self.add_user_bubble(prompt)
+
+        key = os.environ.get("GAPGPT_KEY")
+        if not key:
+            self.add_ai_bubble("<error> API key not found")
+            return
+
+        current_url = self.tabs.currentWidget().url().toString()
+        body = {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": f"You are NoxeAI, a helpful AI assistant embedded in a browser. Current page URL: {current_url}."},
+                {"role": "user", "content": prompt}
+            ]
+        }
+
+        url = QUrl("https://api.gapgpt.app/v1/chat/completions")
+        request = QNetworkRequest(url)
+        request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
+        request.setRawHeader(b"Authorization", f"Bearer {key}".encode())
+
+        data = QByteArray(json.dumps(body).encode("utf-8"))
+        self.network_manager.post(request, data)
+
+
+    def handle_ai_response(self, reply):
+        raw = bytes(reply.readAll()).decode("utf-8")
+        if reply.error():
+            self.add_ai_bubble(f"<error> {reply.errorString()}")
+            print("RAW ERROR RESPONSE:", raw)
+            return
+
+        data = json.loads(raw)
+        try:
+            response_text = data["choices"][0]["message"]["content"]
+        except Exception:
+            response_text = str(data)
+
+        self.add_ai_bubble(response_text)
+
+
+    # Chat bubble helpers
+    def add_user_bubble(self, text):
+        lbl = QLabel(text)
+        lbl.setStyleSheet("""
+            QLabel {
+                background-color: #4b8bf5;
+                color: white;
+                padding: 6px 10px;
+                border-radius: 12px;
+                max-width: 250px;
+            }
+        """)
+        lbl.setWordWrap(True)
+        hbox = QHBoxLayout()
+        hbox.addStretch()
+        hbox.addWidget(lbl)
+        self.chat_layout.addLayout(hbox)
+        self.chat_scroll.verticalScrollBar().setValue(self.chat_scroll.verticalScrollBar().maximum())
+
+    def add_ai_bubble(self, text):
+        lbl = QLabel(text)
+        lbl.setStyleSheet("""
+            QLabel {
+                background-color: #2e2e3e;
+                color: #eee;
+                padding: 6px 10px;
+                border-radius: 12px;
+                max-width: 250px;
+            }
+        """)
+        lbl.setWordWrap(True)
+        hbox = QHBoxLayout()
+        hbox.addWidget(lbl)
+        hbox.addStretch()
+        self.chat_layout.addLayout(hbox)
+        self.chat_scroll.verticalScrollBar().setValue(self.chat_scroll.verticalScrollBar().maximum())
+        self.chat_scroll.setStyleSheet("""
+            QScrollBar:vertical {
+                background: #1e1e2f;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical {
+                background: #4b8bf5;
+                min-height: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #6ba0f8;
+            }
+            QScrollBar::add-line, QScrollBar::sub-line {
+                height: 0px;
+            }
+
+            QScrollBar:horizontal {
+                background: #1e1e2f;
+                height: 10px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:horizontal {
+                background: #4b8bf5;
+                min-width: 20px;
+                border-radius: 5px;
+            }
+            QScrollBar::handle:horizontal:hover {
+                background: #6ba0f8;
+            }
+            QScrollBar::add-line, QScrollBar::sub-line {
+                width: 0px;
+            }
+        """)
+
+
+
 
 
     # --- fullscreen & devtools ---
