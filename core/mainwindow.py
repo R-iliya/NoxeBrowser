@@ -457,7 +457,7 @@ class MainWindow(QMainWindow):
         
         profile.setSpellCheckEnabled(False)
         profile.setHttpAcceptLanguage("en-US,en;q=0.9")
-        profile.setHttpUserAgent(profile.httpUserAgent() + " +Brotli/HTTP2")
+        profile.setHttpUserAgent(profile.httpUserAgent())
 
         view = QWebEngineView()
         view.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
