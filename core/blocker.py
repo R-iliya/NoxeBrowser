@@ -39,27 +39,48 @@ class Blocker(QWebEngineUrlRequestInterceptor):
         }
 
     def interceptRequest(self, info):
-        url = info.requestUrl().toString()
-        parsed = urlparse(url)
-        domain = parsed.hostname
-        if not domain:
+        url_str = info.requestUrl().toString().lower()
+        parsed = urlparse(url_str)
+        if not parsed.hostname:
             return
 
-        domain = domain.lower()
+        domain = parsed.hostname.lower()
         parts = domain.split('.')
 
+        blocked = False
         for i in range(len(parts) - 1):
             suffix = '.'.join(parts[i:])
             if suffix in self.blocked_domains:
-                # Optional: be more selective on what you block
-                if info.resourceType() in [
-                    QWebEngineUrlRequestInfo.ResourceTypeScript,
-                    QWebEngineUrlRequestInfo.ResourceTypeStylesheet,
-                    QWebEngineUrlRequestInfo.ResourceTypeImage,
-                    QWebEngineUrlRequestInfo.ResourceTypeFontResource,
-                    QWebEngineUrlRequestInfo.ResourceTypeSubResource,
-                ]:
-                    if __debug__:
-                        print(f"Blocked {info.resourceType().name}: {suffix} in {domain} → {url[:120]}...")
-                    info.block(True)
-                return  # early exit even if not blocked — no need to check further
+                blocked = True
+                break
+
+        if blocked:
+            # Your existing resource type filter
+            if info.resourceType() in [
+                QWebEngineUrlRequestInfo.ResourceTypeScript,
+                QWebEngineUrlRequestInfo.ResourceTypeStylesheet,
+                QWebEngineUrlRequestInfo.ResourceTypeImage,
+                QWebEngineUrlRequestInfo.ResourceTypeFontResource,
+                QWebEngineUrlRequestInfo.ResourceTypeSubResource,
+            ]:
+                if __debug__:
+                    print(f"Blocked {info.resourceType().name}: {suffix} → {url_str[:120]}")
+                info.block(True)
+            return
+
+        # Block data: URIs for scripts / objects
+        if url_str.startswith("data:") and info.resourceType() in [
+            QWebEngineUrlRequestInfo.ResourceTypeScript,
+            QWebEngineUrlRequestInfo.ResourceTypeObject,
+        ]:
+            if __debug__:
+                print(f"Blocked dangerous data: URI → {url_str[:80]}")
+            info.block(True)
+            return
+
+        # Block known tracking pixels / beacons that slip through
+        if "pixel" in url_str or "beacon" in url_str or "track" in url_str:
+            if info.resourceType() == QWebEngineUrlRequestInfo.ResourceTypeImage:
+                if __debug__:
+                    print(f"Blocked tracking pixel/beacon → {url_str[:120]}")
+                info.block(True)
