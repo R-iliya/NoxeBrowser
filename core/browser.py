@@ -38,25 +38,7 @@ def cleanup_cache(profile):
             except (OSError, PermissionError):
                 pass  # file in use or permission issue
 
-def save_tab_order(self):
-    try:
-        order = [self.tabs.widget(i).url().toString() for i in range(self.tabs.count())]
-        with open("tabs.json", "w", encoding="utf-8") as f:
-            json.dump(order, f, indent=2)
-    except Exception as e:
-        print("Failed to save tab order:", e)
 
-def load_tab_order(self):
-    if os.path.exists("tabs.json"):
-        with open("tabs.json", "r") as f:
-            urls = json.load(f)
-        for url in urls:
-            try:
-                qurl = QUrl(url)
-                if qurl.isValid():
-                    self.add_new_tab(qurl)
-            except Exception as e:
-                print("Failed to load tab:", url, e)
 
 def set_privacy_overrides(profile, dark_mode=True):
     js = f"""
