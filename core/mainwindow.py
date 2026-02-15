@@ -89,7 +89,8 @@ class MainWindow(QMainWindow):
 
                 <h1>Oops!</h1>
                 <p>The page <strong>{url}</strong> could not be loaded.</p>
-                <a href="local://home" class="button">Go Home</a>
+                <a href="local://home" class="button">Go Home</a><br>
+                <a href="{url}" class="button">Retry</a>
                 <footer>© Noxe Browser 2025</footer>
 
                 <script>
