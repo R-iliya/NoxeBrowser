@@ -895,6 +895,8 @@ class MainWindow(QMainWindow):
 
     # --- downloads ---
     def handle_download(self, download):
+        item = DownloadItem(download)
+        self.download_layout.addWidget(item)
         filename = download.suggestedFileName()
         ext = os.path.splitext(filename)[1]
         if not ext:
@@ -928,6 +930,7 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
 
+    # --- tab save/load ---
     def save_tab_order(self):
         try:
             order = [self.tabs.widget(i).url().toString() for i in range(self.tabs.count())]

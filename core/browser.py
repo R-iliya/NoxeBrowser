@@ -1,8 +1,6 @@
 # --- Browser & WebView ---
 # importing required libraries
 from PyQt5.QtWebEngineWidgets import *
-from PyQt5.QtPrintSupport import *
-from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -14,7 +12,6 @@ if sys.platform.startswith("win"):
     import winreg
     import ctypes
 
-from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
 from core.blocker import *
 from core.scheme import *
 from core.optimizations import *
@@ -108,59 +105,6 @@ def set_privacy_overrides(profile, dark_mode=True):
 
             // --- override fetch ---
             const _fetch = window.fetch;
-            window.fetch = function(input, init) {{
-                try {{
-                    const url = (typeof input === 'string') ? input :
-                                (input && input.url) ? input.url : '';
-                    if (isAdUrl(url)) {{
-                        console.debug("[AdBlock] blocked fetch", url);
-                        // return a rejected promise so caller sees a network error
-                        return Promise.reject(new TypeError('Network request blocked by lightweight ad blocker'));
-                    }}
-                }} catch(e){{ /* ignore */ }}
-                return _fetch.apply(this, arguments);
-            }};
-
-            // --- override XMLHttpRequest (capture URL on open, block on send) ---
-            const _xhrOpen = XMLHttpRequest.prototype.open;
-            const _xhrSend = XMLHttpRequest.prototype.send;
-            XMLHttpRequest.prototype.open = function(method, url) {{
-                try {{ this.__adblock_url = url; }} catch(e){{ this.__adblock_url = null; }}
-                return _xhrOpen.apply(this, arguments);
-            }};
-            XMLHttpRequest.prototype.send = function(body) {{
-                try {{
-                    if (isAdUrl(this.__adblock_url)) {{
-                        console.debug("[AdBlock] blocked XHR", this.__adblock_url);
-                        // Abort silently:
-                        this.abort && this.abort();
-                        // Fire readyState changes to mimic a failed request (optional)
-                        if (typeof this.onerror === 'function') {{
-                            try {{ this.onerror(new Error('Blocked by adblock')); }} catch(e){{ }}
-                        }}
-                        return;
-                    }}
-                }} catch(e){{ /* ignore */ }}
-                return _xhrSend.apply(this, arguments);
-            }};
-
-            // --- block WebSocket connections to known ad hosts (throw on construction) ---
-            const WS = window.WebSocket;
-            if (WS) {{
-                window.WebSocket = function(url, protocols) {{
-                    if (isAdUrl(url)) {{
-                        console.debug("[AdBlock] blocked WebSocket", url);
-                        throw new Error('Blocked WebSocket to ad host');
-                    }}
-                    return new WS(url, protocols);
-                }};
-                // copy static properties
-                window.WebSocket.prototype = WS.prototype;
-                window.WebSocket.CONNECTING = WS.CONNECTING;
-                window.WebSocket.OPEN = WS.OPEN;
-                window.WebSocket.CLOSING = WS.CLOSING;
-                window.WebSocket.CLOSED = WS.CLOSED;
-            }}
 
             // --- block navigator.sendBeacon to ad endpoints ---
             if (navigator && navigator.sendBeacon) {{
@@ -373,36 +317,51 @@ class DownloadItem(QWidget):
     def __init__(self, download):
         super().__init__()
         self.download = download
+        self.path = None
 
         layout = QHBoxLayout()
         self.label = QLabel(download.suggestedFileName())
         self.progress = QProgressBar()
+        self.open_btn = QPushButton("Open")
+        self.open_btn.setEnabled(False)
+        self.open_btn.clicked.connect(self.open_file)
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.clicked.connect(self.cancel_download)
 
         layout.addWidget(self.label)
         layout.addWidget(self.progress)
+        layout.addWidget(self.open_btn)
         layout.addWidget(self.cancel_btn)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
         self.setLayout(layout)
 
         download.downloadProgress.connect(self.on_progress)
         download.finished.connect(self.on_finished)
+        download.pathChanged.connect(lambda p: setattr(self, 'path', p))
 
-    def on_progress(self, received, total):
-        if total > 0:
-            self.progress.setValue(int(received / total * 100))
+    def on_progress(self, bytesReceived, bytesTotal):
+        if bytesTotal > 0:
+            self.progress.setValue(int(bytesReceived / bytesTotal * 100))
 
     def on_finished(self):
         self.progress.setValue(100)
-        self.cancel_btn.setDisabled(True)
-        QMessageBox.information(self, "Download Finished", f"{self.download.path()} saved!")
+        self.cancel_btn.setText("Remove")
+        self.cancel_btn.clicked.disconnect()
+        self.cancel_btn.clicked.connect(self.remove_self)
+        self.open_btn.setEnabled(True)
+        # No popup — just update UI
+
+    def open_file(self):
+        if self.path and os.path.exists(self.path):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(self.path))
 
     def cancel_download(self):
         self.download.cancel()
         self.progress.setFormat("Canceled")
         self.cancel_btn.setDisabled(True)
+
+    def remove_self(self):
+        self.setParent(None)
+        self.deleteLater()
 
 
 from core.bookmarkswidget import *
