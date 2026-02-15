@@ -8,17 +8,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import subprocess
 import platform
-import winreg
 import ctypes
-import json
-import sys
 import os
 import re
-from PyQt5.QtWebEngineCore import (
-    QWebEngineUrlRequestInterceptor,
-    QWebEngineUrlSchemeHandler,
-    QWebEngineUrlScheme,
-)
 
 
 # --- DebugMode, Turn off unless debugging. --- 
