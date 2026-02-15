@@ -406,7 +406,7 @@ class MainWindow(QMainWindow):
 
 
         # load tabs
-        load_tab_order(self)
+        self.load_tab_order()
 
         # create first tab
         if self.tabs.count() == 0:
