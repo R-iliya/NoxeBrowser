@@ -1,5 +1,4 @@
 # --- optimizations & visuals ---
-print("2 Running Optimizations")
 # importing required libraries
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *

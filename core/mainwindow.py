@@ -1,5 +1,4 @@
 # --- MainWindow & Essentials ---
-print("7 Running MainWindow")
 # importing required libraries
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *

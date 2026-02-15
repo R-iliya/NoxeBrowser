@@ -1,5 +1,4 @@
 # --- Bookmarks & its listwidget ---
-print("3 Running Bookmarks")
 # importing required libraries
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *

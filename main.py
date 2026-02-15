@@ -1,5 +1,4 @@
 # --- Main Code ---
-print("1 Running Main code")
 # importing required libraries
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *
@@ -31,12 +30,13 @@ from core.mainwindow import *
 
 
 if sys.platform.startswith("win"):
-    import ctypes
-    # Make the app DPI aware so it scales correctly on high-DPI displays
     try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(2)  # System DPI aware
-    except Exception:
-        pass
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        if __debug__:
+            print("DPI awareness set to per-monitor")
+    except Exception as e:
+        if __debug__:
+            print("DPI awareness failed:", e)
 
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and PyInstaller exe."""
@@ -49,10 +49,11 @@ def resource_path(relative_path):
 
 
 print("\n[Browser Loaded]")
-print(f"GPU: {gpu.strip()}")
-print(f"QT_OPENGL: {os.environ.get('QT_OPENGL')}")
-print(f"Flags: {len(flags)} applied")
-print(OPT_RESULT,"\n")
+if __debug__:
+    print("GPU:", gpu.strip())
+    print("QT_OPENGL:", os.environ.get('QT_OPENGL'))
+    print(f"Flags: {len(flags)} applied")
+    print(OPT_RESULT, "\n")
 
 # ---- MAIN ENTRYPOINT ----
 if __name__ == "__main__":
