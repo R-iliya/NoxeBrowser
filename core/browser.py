@@ -20,34 +20,23 @@ if sys.platform.startswith("win"):
     import winreg
     import ctypes
 
-def animate_menu(menu):
-    menu.setWindowOpacity(0.0)
-    anim = QPropertyAnimation(menu, b"windowOpacity")
-    anim.setDuration(120)
-    anim.setStartValue(0.0)
-    anim.setEndValue(1.0)
-    anim.setEasingCurve(QEasingCurve.OutQuad)
-    anim.start(QPropertyAnimation.DeleteWhenStopped)
-    return anim
-
 from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor
-
 from core.blocker import *
-
 from core.scheme import *
-
 from core.optimizations import *
 
-def cleanup_cache():
-    if os.path.exists("./cache"):
-        for fname in os.listdir("./cache"):
-            fp = os.path.join("./cache", fname)
-            if os.path.isfile(fp):
-                try:
-                    if os.path.getsize(fp) > 50*1024*1024:
-                        os.remove(fp)
-                except (OSError, PermissionError, Exception):
-                    pass
+def cleanup_cache(profile):
+    cache_path = profile.cachePath()
+    if not os.path.exists(cache_path):
+        return
+    for root, _, files in os.walk(cache_path):
+        for fname in files:
+            fp = os.path.join(root, fname)
+            try:
+                if os.path.getsize(fp) > 50 * 1024 * 1024:
+                    os.remove(fp)
+            except (OSError, PermissionError):
+                pass  # file in use or permission issue
 
 def save_tab_order(self):
     try:
@@ -68,18 +57,6 @@ def load_tab_order(self):
                     self.add_new_tab(qurl)
             except Exception as e:
                 print("Failed to load tab:", url, e)
-
-
-class Blocker(QWebEngineUrlRequestInterceptor):
-    BLOCK_LIST = [
-        "doubleclick.net", "googlesyndication.com", "adservice.google.com",
-        "googletagmanager.com", "googletagservices.com", "taboola.com",
-        "outbrain.com", "criteo.net", "adroll.com", "scorecardresearch.com",
-    ]
-    def interceptRequest(self, info):
-        url = info.requestUrl().toString()
-        if any(b in url for b in self.BLOCK_LIST):
-            info.block(True)
 
 def set_privacy_overrides(profile, dark_mode=True):
     js = f"""
@@ -432,7 +409,6 @@ class DownloadItem(QWidget):
         layout.addWidget(self.cancel_btn)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        print("testing;")
         self.setLayout(layout)
 
         download.downloadProgress.connect(self.on_progress)
@@ -454,7 +430,3 @@ class DownloadItem(QWidget):
 
 
 from core.bookmarkswidget import *
-
-class WebEngineView(QWebEngineView):
-    def __init__(self, parent=None):
-        super().__init__(parent)

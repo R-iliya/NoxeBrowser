@@ -943,7 +943,7 @@ class MainWindow(QMainWindow):
             self.save_bookmarks()   # save bookmarks before closing
             self.save_settings()    # save settings before closing
             self.save_history()     # save history before closing
-            save_tab_order(self)        # save tab order before closing
+            save_tab_order(self)    # save tab order before closing
             print("exitting with normal save;")
         except Exception:
             print("exitting with bad save;")
