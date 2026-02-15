@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
         self.bookmarks = []
         self.history = []
 
-        # profiles for downloads
+        # profiles
         profile = QWebEngineProfile.defaultProfile()
         profile.downloadRequested.connect(self.handle_download)
 
@@ -444,6 +444,8 @@ class MainWindow(QMainWindow):
         profile.setSpellCheckEnabled(False)
         profile.setHttpAcceptLanguage("en-US,en;q=0.9")
 
+        self.profile = profile
+
 
     # --- history context menu ---
     def history_context_menu(self, pos):
@@ -616,6 +618,12 @@ class MainWindow(QMainWindow):
     def close_current_tab(self, i):
         if self.tabs.count() < 2:
             return
+        browser = self.tabs.widget(i)
+        url = browser.url().toString()
+        title = browser.title() or "Untitled"
+        self.last_closed_tabs.append((url, title))
+        if len(self.last_closed_tabs) > 20:
+            self.last_closed_tabs.pop(0)
         self.tabs.removeTab(i)
 
     def update_title(self, browser):
@@ -895,8 +903,6 @@ class MainWindow(QMainWindow):
 
     # --- downloads ---
     def handle_download(self, download):
-        item = DownloadItem(download)
-        self.download_layout.addWidget(item)
         filename = download.suggestedFileName()
         ext = os.path.splitext(filename)[1]
         if not ext:
@@ -908,11 +914,8 @@ class MainWindow(QMainWindow):
 
         path, _ = QFileDialog.getSaveFileName(self, "Save File", filename, f"{ext.upper()} Files (*{ext});;All Files (*.*)")
         if not path:
-            # user cancelled, cancel the download
-            try:
-                download.cancel()
-            except Exception:
-                pass
+            self.status.showMessage("Download canceled", 3000)
+            download.cancel()
             return
 
         if not os.path.splitext(path)[1] and ext:
@@ -925,15 +928,17 @@ class MainWindow(QMainWindow):
             self.download_layout.addWidget(item)
         except Exception as e:
             print("Download failed:", e)
-            try:
-                download.cancel()
-            except Exception:
-                pass
+            download.cancel()
 
     # --- tab save/load ---
     def save_tab_order(self):
         try:
-            order = [self.tabs.widget(i).url().toString() for i in range(self.tabs.count())]
+            order = []
+            for i in range(self.tabs.count()):
+                qurl = self.tabs.widget(i).url()
+                url_str = qurl.toString()
+                if qurl.isValid() and url_str and "about:" not in url_str and "data:" not in url_str:
+                    order.append(url_str)
             with open("tabs.json", "w", encoding="utf-8") as f:
                 json.dump(order, f, indent=2)
         except Exception as e:
@@ -941,15 +946,17 @@ class MainWindow(QMainWindow):
 
     def load_tab_order(self):
         if os.path.exists("tabs.json"):
-            with open("tabs.json", "r") as f:
-                urls = json.load(f)
-            for url in urls:
-                try:
+            try:
+                with open("tabs.json", "r", encoding="utf-8") as f:
+                    urls = json.load(f)
+                for url in urls:
                     qurl = QUrl(url)
                     if qurl.isValid():
-                        self.add_new_tab(qurl)
-                except Exception as e:
-                    print("Failed to load tab:", url, e)
+                        # Try to use last known title if you saved it, or just URL
+                        label = qurl.toString()[:30] + "..." if len(qurl.toString()) > 30 else qurl.toString()
+                        self.add_new_tab(qurl, label)
+            except Exception as e:
+                print("Failed to load tab order:", e)
       
     # --- save on exit ---
     def closeEvent(self, event):
@@ -963,7 +970,7 @@ class MainWindow(QMainWindow):
             print("exitting with bad save;")
 
         try:
-            cleanup_cache()
+            cleanup_cache(self.profile)
         except Exception:
             print("Failed to cleanup cache on exit;")
 
