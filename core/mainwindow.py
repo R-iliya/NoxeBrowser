@@ -1,4 +1,4 @@
-# --- MainWindow & Essentials ---
+# mainwindow.py - 
 # importing required libraries
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *
@@ -12,7 +12,7 @@ import os
 
 from core.browser import *
 
-# main window
+# MainWindow class including Major parts of the code.
 class MainWindow(QMainWindow):
 
     class WebEnginePage(QWebEnginePage):
@@ -277,12 +277,25 @@ class MainWindow(QMainWindow):
 
         # Download Manager Dock
         self.download_dock = QDockWidget("Downloads", self)
-        self.download_dock.setAllowedAreas(Qt.BottomDockWidgetArea | Qt.RightDockWidgetArea)
+        self.download_dock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.download_dock.setFeatures(
+            QDockWidget.DockWidgetMovable |
+            QDockWidget.DockWidgetFloatable |
+            QDockWidget.DockWidgetClosable
+        )
         self.download_container = QWidget()
         self.download_layout = QVBoxLayout()
+        self.download_layout.setAlignment(Qt.AlignTop)
         self.download_container.setLayout(self.download_layout)
         self.download_dock.setWidget(self.download_container)
-        self.addDockWidget(Qt.BottomDockWidgetArea, self.download_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.download_dock)
+        self.download_dock.setFloating(True)
+        self.download_dock.resize(700, 140)
+        self.download_dock.setTitleBarWidget(QWidget())
+
+        self.download_dock.hide()  # start 
+        
+        QApplication.instance().installEventFilter(self)
 
         # Bookmarks Dock
         self.bookmarks_dock = QDockWidget("Bookmarks", self)
@@ -436,6 +449,8 @@ class MainWindow(QMainWindow):
 
         self.profile = profile
 
+        self.download_dock.hide()
+
     def toggle_ai_dock(self, enabled):
         self.ai_dock.setVisible(enabled)
         self.save_settings()
@@ -556,6 +571,27 @@ class MainWindow(QMainWindow):
     def toggle_downloads(self, enabled):
         self.download_dock.setVisible(enabled)
         self.save_settings()
+
+    def position_download_dock(self):
+        if not self.download_dock.isFloating():
+            return
+
+        margin = 20
+        dock_width = self.download_dock.width()
+        dock_height = self.download_dock.height()
+
+        window_geo = self.frameGeometry()
+        x = window_geo.x() + window_geo.width() - dock_width - margin
+        y = window_geo.y() + 80  # below titlebar
+
+        self.download_dock.move(x, y)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.MouseButtonPress:
+            if self.download_dock.isVisible():
+                if not self.download_dock.geometry().contains(event.globalPos()):
+                    self.download_dock.hide()
+        return super().eventFilter(obj, event)
 
     def toggle_bookmarks(self, enabled):
         self.bookmarks_dock.setVisible(enabled)
@@ -931,6 +967,13 @@ class MainWindow(QMainWindow):
 
     # --- downloads ---
     def handle_download(self, download):
+        # Auto-open download dock
+        if not self.download_dock.isVisible():
+            self.download_dock.show()
+            self.download_dock.setFloating(True)
+            self.position_download_dock()
+            self.download_dock.raise_()
+
         filename = download.suggestedFileName()
         ext = os.path.splitext(filename)[1]
         if not ext:
@@ -1014,5 +1057,7 @@ class MainWindow(QMainWindow):
 
     def showEvent(self, event):
         super().showEvent(event)
+        self.position_download_dock()
         if sys.platform.startswith("win"):
             update_windows_titlebar(self)
+            

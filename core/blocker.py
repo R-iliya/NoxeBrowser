@@ -1,6 +1,10 @@
+# blocker.py - A QWebEngineUrlRequestInterceptor subclass to block ads, trackers, and telemetry in the browser
+
+# importing required libraries
 from PyQt5.QtWebEngineCore import QWebEngineUrlRequestInterceptor, QWebEngineUrlRequestInfo
 from urllib.parse import urlparse
 
+# A QWebEngineUrlRequestInterceptor to block ads, trackers, and telemetry
 class Blocker(QWebEngineUrlRequestInterceptor):
     def __init__(self):
         super().__init__()
@@ -35,27 +39,29 @@ class Blocker(QWebEngineUrlRequestInterceptor):
             "samsungads.com",
             "adcolony.com",
             "unityads.unity3d.com",
-            # Add more as you spot them
         }
 
+    # Intercept requests and block those matching known ad/tracker domains or patterns
     def interceptRequest(self, info):
         url_str = info.requestUrl().toString().lower()
         parsed = urlparse(url_str)
         if not parsed.hostname:
             return
 
+        # Normalize domain by stripping subdomains and checking against blocked list
         domain = parsed.hostname.lower()
         parts = domain.split('.')
 
+        # Check if the domain or any of its parent domains are in the blocked list
         blocked = False
         for i in range(len(parts) - 1):
             suffix = '.'.join(parts[i:])
             if suffix in self.blocked_domains:
                 blocked = True
                 break
-
+        
+        # Block common ad/tracker resource types if the domain is blocked
         if blocked:
-            # Your existing resource type filter
             if info.resourceType() in [
                 QWebEngineUrlRequestInfo.ResourceTypeScript,
                 QWebEngineUrlRequestInfo.ResourceTypeStylesheet,
@@ -68,7 +74,7 @@ class Blocker(QWebEngineUrlRequestInterceptor):
                 info.block(True)
             return
 
-        # Block data: URIs for scripts / objects
+        # Block data: URIs that are commonly used for malicious scripts or tracking pixels
         if url_str.startswith("data:") and info.resourceType() in [
             QWebEngineUrlRequestInfo.ResourceTypeScript,
             QWebEngineUrlRequestInfo.ResourceTypeObject,
@@ -78,7 +84,7 @@ class Blocker(QWebEngineUrlRequestInterceptor):
             info.block(True)
             return
 
-        # Block known tracking pixels / beacons that slip through
+        # Additional heuristic blocking for URLs containing common tracking keywords
         if "pixel" in url_str or "beacon" in url_str or "track" in url_str:
             if info.resourceType() == QWebEngineUrlRequestInfo.ResourceTypeImage:
                 if __debug__:

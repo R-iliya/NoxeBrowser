@@ -1,10 +1,13 @@
-# --- Browser & WebView ---
+# blocker.py - Main browser class for the Noxe web browser application, handling the main window, tabs, bookmarks, downloads, and settings
+
+# importing required libraries
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QUrl, QTimer
 from PyQt5.QtGui import QDesktopServices
 import os
 import sys
 
+# Platform-specific imports for dark mode detection and title bar theming on Windows
 if sys.platform.startswith("win"):
     import winreg
     import ctypes
@@ -13,6 +16,7 @@ from core.blocker import *
 from core.scheme import *
 from core.optimizations import *
 
+# Cleanup old cache files that are larger than 50MB to prevent excessive disk usage over time
 def cleanup_cache(profile):
     cache_path = profile.cachePath()
     if not os.path.exists(cache_path):
@@ -26,7 +30,7 @@ def cleanup_cache(profile):
             except (OSError, PermissionError):
                 pass  # file in use or permission issue
 
-
+# Set up JavaScript overrides to enhance privacy by blocking common ad/tracker patterns and spoofing dark mode preferences
 def set_privacy_overrides(profile, dark_mode=True):
     js = f"""
     (function() {{
@@ -102,8 +106,9 @@ def set_privacy_overrides(profile, dark_mode=True):
     script.setRunsOnSubFrames(False)
     script.setWorldId(QWebEngineScript.MainWorld)
     script.setSourceCode(js)
-
     scripts = profile.scripts()
+
+    # Use insert if available to avoid duplicates, otherwise fallback to addScript (Qt5)
     try:
         if hasattr(scripts, "insert"):
             scripts.insert(script)
@@ -112,8 +117,7 @@ def set_privacy_overrides(profile, dark_mode=True):
     except Exception as e:
         print("Could not add JS override script:", e)
 
-
-# Dark mode helpers
+# detect if OS is in dark mode (Windows) to sync browser theme and provide a better user experience, also used for JS overrides to spoof dark mode preference to websites
 def is_os_dark_mode():
     if sys.platform.startswith("win"):
         try:
@@ -126,7 +130,8 @@ def is_os_dark_mode():
             return False
     return False
 
-
+# Update Windows title bar to match dark mode preference through DwmSetWindowAttribute for a more integrated look on Windows 10/11 when dark mode is enabled. 
+# This is called after the main window is created to ensure the title bar matches the rest of the application's dark theme.
 def update_windows_titlebar(window):
     if sys.platform.startswith("win"):
         try:
@@ -141,7 +146,7 @@ def update_windows_titlebar(window):
         except:
             pass
 
-
+# Apply dark theme to the entire application using a custom palette and stylesheet for a consistent dark mode experience across all widgets and controls
 def apply_dark_theme(app):
     app.setStyle("Fusion")
     dark_palette = QPalette()
@@ -165,7 +170,7 @@ def apply_dark_theme(app):
 
     app.setPalette(dark_palette)
 
-    # Stylesheet
+    # Stylesheet for additional theming of widgets to match the dark mode.
     app.setStyleSheet("""
         QWidget { background-color: #2d2d2d; color: #ffffff; border-radius: 8px; }
         QLineEdit, QProgressBar, QListWidget, QDockWidget { background-color: #3a3a3a; border-radius: 8px; padding: 6px; }
@@ -179,7 +184,7 @@ def apply_dark_theme(app):
     """)
 
 
-# Download item
+# Download item widget to show download progress and allow opening/canceling downloads in the download manager.
 class DownloadItem(QWidget):
     def __init__(self, download):
         super().__init__()
@@ -210,6 +215,8 @@ class DownloadItem(QWidget):
         if total > 0:
             self.progress.setValue(int(received / total * 100))
 
+    # When the download finishes, update the UI to allow opening the file and change the cancel button to a remove button. 
+    # Also, try to get the file path for opening later, but handle cases where it may not be available.
     def on_finished(self):
         self.progress.setValue(100)
         self.progress.setFormat("Finished")
@@ -224,12 +231,15 @@ class DownloadItem(QWidget):
             self.file_path = None  # Qt5 doesn't expose path reliably
         QTimer.singleShot(10000, self.remove_self)
 
+    # Open the downloaded file using the default application, or show an error if the path is not available
     def open_file(self):
         if self.file_path and os.path.exists(self.file_path):
             QDesktopServices.openUrl(QUrl.fromLocalFile(self.file_path))
         else:
             print("Cannot open file - path not available")
 
+    # Cancel the download if it's still in progress, or remove the item if it's already finished. 
+    # Also update the UI to reflect the canceled state.
     def cancel_download(self):
         self.download.cancel()
         self.progress.setFormat("Canceled")
