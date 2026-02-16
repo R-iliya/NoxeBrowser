@@ -53,11 +53,13 @@ if __debug__:
     print("GPU:", gpu.strip())
     print("QT_OPENGL:", os.environ.get('QT_OPENGL'))
     print(f"Flags: {len(flags)} applied")
-    print(OPT_RESULT, "\n")
 
 # ---- MAIN ENTRYPOINT ----
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     app.setFont(QFont("Segoe UI", 10))
     app.setApplicationName("Noxe Browser")
     if is_os_dark_mode():

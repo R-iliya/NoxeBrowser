@@ -1,12 +1,9 @@
 # --- Browser & WebView ---
-# importing required libraries
-from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-import subprocess
-import sys
+from PyQt5.QtCore import QUrl, QTimer
+from PyQt5.QtGui import QDesktopServices
 import os
+import sys
 
 if sys.platform.startswith("win"):
     import winreg
@@ -30,83 +27,39 @@ def cleanup_cache(profile):
                 pass  # file in use or permission issue
 
 
-
 def set_privacy_overrides(profile, dark_mode=True):
     js = f"""
     (function() {{
         try {{
-            // --- avoid double-inject ---
             if (window.__matchMediaOverridden) return;
             window.__matchMediaOverridden = true;
 
-            // --- safe matchMedia override (falls back to native) ---
-            var desc;
-            try {{ desc = Object.getOwnPropertyDescriptor(window, 'matchMedia'); }} catch(e) {{ desc = null; }}
-            if (!(desc && desc.writable === false)) {{
-                var mqlDark = {{
-                    matches: {str(dark_mode).lower()},
-                    media: "(prefers-color-scheme: dark)",
-                    onchange: null,
-                    addEventListener: function(){{}},
-                    removeEventListener: function(){{}},
-                    addListener: function(){{}},
-                    removeListener: function(){{}}
-                }};
-                var mqlLight = {{
-                    matches: {str(not dark_mode).lower()},
-                    media: "(prefers-color-scheme: light)",
-                    onchange: null,
-                    addEventListener: function(){{}},
-                    removeEventListener: function(){{}},
-                    addListener: function(){{}},
-                    removeListener: function(){{}}
-                }};
-                var nativeMatchMedia = window.matchMedia;
-                window.matchMedia = function(query) {{
-                    try {{
-                        if (query.indexOf("prefers-color-scheme: dark") !== -1) return mqlDark;
-                        if (query.indexOf("prefers-color-scheme: light") !== -1) return mqlLight;
-                        return nativeMatchMedia ? nativeMatchMedia.call(window, query) : {{ matches: false, media: query }};
-                    }} catch(e) {{
-                        console.warn("matchMedia override error:", e);
-                        return {{ matches: false, media: query }};
-                    }}
-                }};
-            }}
+            // safe matchMedia override
+            var nativeMatchMedia = window.matchMedia;
+            window.matchMedia = function(query) {{
+                if (query.includes("prefers-color-scheme: dark")) {{
+                    return {{ matches: {str(dark_mode).lower()}, media: query }};
+                }}
+                if (query.includes("prefers-color-scheme: light")) {{
+                    return {{ matches: {str(not dark_mode).lower()}, media: query }};
+                }}
+                return nativeMatchMedia ? nativeMatchMedia.call(window, query) : {{ matches: false, media: query }};
+            }};
 
-            // --- Lightweight in-page network blocker (simple patterns) ---
+            // simple ad patterns for beacons + DOM
             const adPatterns = [
-                /doubleclick\\.net/i,
-                /googlesyndication\\.com/i,
-                /adservice\\.google\\.com/i,
-                /googletagservices\\.com/i,
-                /googletagmanager\\.com/i,
-                /adsystem\\.com/i,
-                /adsafeprotected\\.com/i,
-                /adroll\\.com/i,
-                /taboola\\.com/i,
-                /outbrain\\.com/i,
-                /scorecardresearch\\.com/i,
-                /amazon-adsystem\\.com/i,
-                /yahoo-ads\\.com/i,
-                /criteo\\.net/i,
-                /zedo\\.com/i
+                /doubleclick\\.net/i, /googlesyndication\\.com/i, /adservice\\.google\\.com/i,
+                /googletagservices\\.com/i, /googletagmanager\\.com/i, /taboola\\.com/i,
+                /outbrain\\.com/i, /criteo\\.net/i, /scorecardresearch\\.com/i
             ];
 
             function isAdUrl(url) {{
-                try {{
-                    if (!url) return false;
-                    url = typeof url === 'string' ? url : (url.url || url.toString());
-                    return adPatterns.some(p => p.test(url));
-                }} catch(e) {{
-                    return false;
-                }}
+                if (!url) return false;
+                url = typeof url === 'string' ? url : (url.url || url.toString() || '');
+                return adPatterns.some(p => p.test(url));
             }}
 
-            // --- override fetch ---
-            const _fetch = window.fetch;
-
-            // --- block navigator.sendBeacon to ad endpoints ---
+            // block beacons
             if (navigator && navigator.sendBeacon) {{
                 const _sendBeacon = navigator.sendBeacon.bind(navigator);
                 navigator.sendBeacon = function(url, data) {{
@@ -118,31 +71,25 @@ def set_privacy_overrides(profile, dark_mode=True):
                 }};
             }}
 
-            // --- simple DOM cleanup: remove common ad iframes/elements as they appear ---
+            // DOM cleanup for iframes + class-based ads
             const observer = new MutationObserver(mutations => {{
                 for (const m of mutations) {{
                     for (const node of m.addedNodes) {{
                         try {{
-                            if (!node) continue;
                             if (node.tagName === 'IFRAME') {{
                                 const src = node.src || node.getAttribute('src') || '';
-                                if (isAdUrl(src)) {{
-                                    node.remove();
-                                    continue;
-                                }}
+                                if (isAdUrl(src)) node.remove();
                             }}
-                            if (node.className && /(^|\\s)(ad|ads|banner|sponsor|sponsored)(\\s|$)/i.test('' + node.className)) {{
+                            if (node.className && /(^|\\s)(ad|ads|banner|sponsor|sponsored)(\\s|$)/i.test(node.className)) {{
                                 node.remove();
-                                continue;
                             }}
-                        }} catch(e){{ }}
+                        }} catch(e) {{ }}
                     }}
                 }}
             }});
             observer.observe(document.documentElement || document, {{ childList: true, subtree: true }});
 
-            // keep the list accessible from console for debugging:
-            window.__lightAdBlock = {{ isAdUrl: isAdUrl, patterns: adPatterns }};
+            window.__lightAdBlock = {{ isAdUrl, patterns: adPatterns }};
         }} catch(e) {{
             console.warn("privacyOverrides failed:", e);
         }}
@@ -165,72 +112,36 @@ def set_privacy_overrides(profile, dark_mode=True):
     except Exception as e:
         print("Could not add JS override script:", e)
 
-# Enabling Windows10+ dark window
-def enable_dark_titlebar(hwnd):
-    """Enable dark mode titlebar if Windows supports it."""
-    try:
-        DWMWA_USE_IMMERSIVE_DARK_MODE = 20  # for Windows 10 1809+
-        set_window_attribute = ctypes.windll.dwmapi.DwmSetWindowAttribute
-        value = ctypes.c_int(1)
-        set_window_attribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE,
-                             ctypes.byref(value), ctypes.sizeof(value))
-    except Exception as e:
-        print("Dark mode titlebar not supported:", e)
 
-
-# Darkmode check on Windows
-def is_windows_dark_mode():
-    try:
-        registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
-        key = winreg.OpenKey(registry, r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
-        value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
-        return value == 0  # 0 = dark mode, 1 = light mode
-    except Exception:
-        return False  # default fallback
-
-# Darkmode check on MacOS
-def is_macos_dark_mode():
-    try:
-        result = subprocess.run(
-            ["defaults", "read", "-g", "AppleInterfaceStyle"],
-            capture_output=True, text=True
-        )
-        return "Dark" in result.stdout
-    except Exception:
-        return False
-
-# Darkmode check on Linux
-def is_linux_dark_mode():
-    # try GTK setting
-    gtk_theme = os.environ.get("GTK_THEME", "").lower()
-    return "dark" in gtk_theme
-
+# Dark mode helpers
 def is_os_dark_mode():
     if sys.platform.startswith("win"):
-        return is_windows_dark_mode()
-    elif sys.platform.startswith("darwin"):
-        return is_macos_dark_mode()
-    else:
-        return is_linux_dark_mode()
+        try:
+            import winreg
+            registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+            key = winreg.OpenKey(registry, r"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize")
+            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+            return value == 0
+        except:
+            return False
+    return False
 
-def set_windows_dark_titlebar(hwnd, enable=True):
-    """Enable or disable immersive dark mode title bar on Windows 10/11"""
-    try:
-        DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-        set_window_attribute = ctypes.windll.dwmapi.DwmSetWindowAttribute
-        value = ctypes.c_int(1 if enable else 0)
-        set_window_attribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE,
-                             ctypes.byref(value), ctypes.sizeof(value))
-    except Exception as e:
-        print("Could not set dark mode titlebar:", e)
 
 def update_windows_titlebar(window):
     if sys.platform.startswith("win"):
-        hwnd = int(window.winId())
-        enable = is_windows_dark_mode()
-        set_windows_dark_titlebar(hwnd, enable)
+        try:
+            import ctypes
+            hwnd = int(window.winId())
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                ctypes.byref(ctypes.c_int(1 if is_os_dark_mode() else 0)),
+                ctypes.sizeof(ctypes.c_int)
+            )
+        except:
+            pass
 
-# --- THEME ---
+
 def apply_dark_theme(app):
     app.setStyle("Fusion")
     dark_palette = QPalette()
@@ -247,7 +158,6 @@ def apply_dark_theme(app):
     dark_palette.setColor(QPalette.Text, Qt.white)
     dark_palette.setColor(QPalette.Button, dark_color)
     dark_palette.setColor(QPalette.ButtonText, Qt.white)
-    dark_palette.setColor(QPalette.BrightText, Qt.red)
     dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.HighlightedText, Qt.black)
     dark_palette.setColor(QPalette.Disabled, QPalette.Text, disabled_color)
@@ -255,69 +165,26 @@ def apply_dark_theme(app):
 
     app.setPalette(dark_palette)
 
-    # Global stylesheet for rounded edges and dark feel
+    # Stylesheet
     app.setStyleSheet("""
-        QWidget {
-            border-radius: 8px;
-            background-color: #2d2d2d;
-            color: #ffffff;
-        }
-        QLineEdit, QProgressBar, QListWidget, QDockWidget {
-            border-radius: 8px;
-            padding: 6px;
-            background-color: #3a3a3a;
-        }
-        QMenu {
-            background: rgba(45, 45, 45, 220);
-            border: 1px solid #3c3c3c;
-            border-radius: 8px;
-            padding: 6px;
-        }
-        QMenu::item {
-            padding: 1px 90px 6px 6px;
-            color: #f0f0f0;
-            font-size: 13px;
-            border-radius: 6px;
-        }
-        QMenu::item:selected {
-            background-color: #3d3d3d;
-        }
-        QMenu::separator {
-            height: 1px;
-            background: #444;
-            margin: 4px 8px;
-        }
-        QMenu::icon {
-            margin-left: 6px;
-        }
-        QMenu::indicator {
-            width: 0px;
-            height: 0px;
-        }
-        QPushButton {
-            border-radius: 6px;
-            background-color: #444;
-            padding: 6px;
-        }
-        QPushButton:hover {
-            background-color: #555;
-        }
-        QTabBar::tab {
-            border-radius: 8px;
-            padding: 6px;
-            margin: 2px;
-        }
-        QTabBar::tab:selected {
-            background: #555;
-        }
+        QWidget { background-color: #2d2d2d; color: #ffffff; border-radius: 8px; }
+        QLineEdit, QProgressBar, QListWidget, QDockWidget { background-color: #3a3a3a; border-radius: 8px; padding: 6px; }
+        QMenu { background: rgba(45, 45, 45, 220); border: 1px solid #3c3c3c; border-radius: 8px; padding: 6px; }
+        QMenu::item { padding: 6px 32px; color: #f0f0f0; }
+        QMenu::item:selected { background-color: #3d3d3d; }
+        QPushButton { background-color: #444; border-radius: 6px; padding: 6px; }
+        QPushButton:hover { background-color: #555; }
+        QTabBar::tab { background: #3a3a3a; border-radius: 8px; padding: 6px; margin: 2px; }
+        QTabBar::tab:selected { background: #555; }
     """)
 
-# Download item widget for the manager
+
+# Download item
 class DownloadItem(QWidget):
     def __init__(self, download):
         super().__init__()
         self.download = download
-        self.path = None
+        self.file_path = None
 
         layout = QHBoxLayout()
         self.label = QLabel(download.suggestedFileName())
@@ -332,32 +199,42 @@ class DownloadItem(QWidget):
         layout.addWidget(self.progress)
         layout.addWidget(self.open_btn)
         layout.addWidget(self.cancel_btn)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
         self.setLayout(layout)
 
         download.downloadProgress.connect(self.on_progress)
         download.finished.connect(self.on_finished)
-        download.pathChanged.connect(lambda p: setattr(self, 'path', p))
 
-    def on_progress(self, bytesReceived, bytesTotal):
-        if bytesTotal > 0:
-            self.progress.setValue(int(bytesReceived / bytesTotal * 100))
+    def on_progress(self, received, total):
+        if total > 0:
+            self.progress.setValue(int(received / total * 100))
 
     def on_finished(self):
         self.progress.setValue(100)
+        self.progress.setFormat("Finished")
         self.cancel_btn.setText("Remove")
         self.cancel_btn.clicked.disconnect()
         self.cancel_btn.clicked.connect(self.remove_self)
         self.open_btn.setEnabled(True)
-        # No popup — just update UI
+        # Try to get path after finish
+        try:
+            self.file_path = self.download.path()
+        except AttributeError:
+            self.file_path = None  # Qt5 doesn't expose path reliably
+        QTimer.singleShot(10000, self.remove_self)
 
     def open_file(self):
-        if self.path and os.path.exists(self.path):
-            QDesktopServices.openUrl(QUrl.fromLocalFile(self.path))
+        if self.file_path and os.path.exists(self.file_path):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(self.file_path))
+        else:
+            print("Cannot open file - path not available")
 
     def cancel_download(self):
         self.download.cancel()
         self.progress.setFormat("Canceled")
         self.cancel_btn.setDisabled(True)
+        QTimer.singleShot(5000, self.remove_self)
 
     def remove_self(self):
         self.setParent(None)

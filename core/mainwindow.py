@@ -24,84 +24,6 @@ class MainWindow(QMainWindow):
         def on_load_finished(self, ok):
             if not ok:
                 url = self.url().toString()
-                custom_html = f"""
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Page Unreachable</title>
-                <style>
-                /* Reset & global styles */
-                * {{
-                    margin:0; padding:0; box-sizing:border-box; 
-                    font-family:"Segoe UI", Roboto, sans-serif;
-                }}
-                html {{ font-size:16px; }}
-                body {{
-                    min-height:100vh;
-                    display:flex;
-                    flex-direction:column;
-                    justify-content:center;
-                    align-items:center;
-                    text-align:center;
-                    padding:2rem;
-                    background:white;
-                    color:#080808;
-                    transition:background 0.5s, color 0.5s;
-                    animation: fadeIn 0.8s ease-in-out;
-                }}
-                h1, p, footer, a {{
-                    -webkit-user-select:none;
-                    -moz-user-select:none;
-                    -ms-user-select:none;
-                    user-select:none;
-                }}
-                a {{ text-decoration:none; }}
-                @keyframes fadeIn {{
-                    from {{ opacity:0; transform:translateY(10px); }}
-                    to {{ opacity:1; transform:translateY(0); }}
-                }}
-                h1 {{ font-size:3rem; font-weight:700; margin-bottom:1rem; letter-spacing:0.125rem; }}
-                p {{ font-size:1.125rem; margin-bottom:1.5rem; }}
-                a.button {{
-                    display:inline-block;
-                    padding:0.75rem 1.5rem;
-                    border-radius:50rem;
-                    background:#42a0ff;
-                    color:#fff;
-                    font-weight:600;
-                    transition:0.3s;
-                }}
-                a.button:hover {{ background:#3390e0; }}
-                footer {{ margin-top:2rem; font-size:0.9rem; color:rgba(0,0,0,0.5); }}
-                /* Dark mode */
-                body.dark-mode {{ background:#1c1c1c; color:#f5f5f5; }}
-                body.dark-mode footer {{ color:rgba(255,255,255,0.5); }}
-                body.dark-mode a.button {{ background:#42a0ff; color:#fff; }}
-                body.dark-mode a.button:hover {{ background:#3390e0; }}
-                /* Logo */
-                .logo {{ width:120px; margin-bottom:2rem; pointer-events:none; }}
-                .logo img {{ width:100%; height:auto; display:block; }}
-                </style>
-                </head>
-                <body>
-
-                <h1>Oops!</h1>
-                <p>The page <strong>{url}</strong> could not be loaded.</p>
-                <a href="local://home" class="button">Go Home</a><br>
-                <a href="{url}" class="button">Retry</a>
-                <footer>© Noxe Browser 2025</footer>
-
-                <script>
-                    if(window.matchMedia('(prefers-color-scheme: dark)').matches) {{
-                        document.body.classList.add('dark-mode');
-                    }}
-                </script>
-                </body>
-                </html>
-                """
-                self.setHtml(custom_html, QUrl("about:blank"))
 
 
         def acceptNavigationRequest(self, url, _type, isMainFrame):
@@ -109,18 +31,18 @@ class MainWindow(QMainWindow):
                 modifiers = QApplication.keyboardModifiers()
                 buttons = QApplication.mouseButtons()
 
-                # Ctrl + click opens new tab
                 if modifiers & Qt.ControlModifier:
                     if self.main_window:
                         self.main_window.add_new_tab(url)
                     return False
 
-                # Middle-click opens new tab
                 if buttons & Qt.MiddleButton:
                     if self.main_window:
                         self.main_window.add_new_tab(url)
                     return False
 
+                return True
+            
             return super().acceptNavigationRequest(url, _type, isMainFrame)
 
         def handle_feature_permission_request(self, origin, feature):
@@ -276,8 +198,6 @@ class MainWindow(QMainWindow):
                 background-color: #1e1e2f;
                 border: 2px solid #3a3a5a;
                 border-radius: 10px;
-                /* soft shadow glow */
-                box-shadow: 0px 0px 15px rgba(75, 139, 245, 0.4);
             }
         """)
         
@@ -323,7 +243,6 @@ class MainWindow(QMainWindow):
                 color: #4b8bf5;
                 font-weight: bold;
                 font-size: 14pt;
-                text-shadow: 1px 1px 4px #3a3a5a;
             }
         """)
         self.ai_input.setStyleSheet("""
@@ -665,6 +584,7 @@ class MainWindow(QMainWindow):
                 # treat it as a search
                 q = QUrl(f"https://google.com/search?q={text}")
         self.tabs.currentWidget().setUrl(q)
+        print(f"[NAV] Attempting: {q.toString()}")
 
     def update_urlbar(self, q, browser=None):
         if browser != self.tabs.currentWidget():
@@ -913,13 +833,13 @@ class MainWindow(QMainWindow):
                 ext = f".{mime_ext}"
                 filename += ext
 
-        path, _ = QFileDialog.getSaveFileName(self, "Save File", filename, f"{ext.upper()} Files (*{ext});;All Files (*.*)")
+        path, _ = QFileDialog.getSaveFileName(self, "Save File", filename, "...")
         if not path:
             self.status.showMessage("Download canceled", 3000)
             download.cancel()
             return
 
-        if not os.path.splitext(path)[1] and ext:
+        if not os.path.splitext(path)[1]:
             path += ext
 
         try:

@@ -1,5 +1,4 @@
 # --- local scheme & Paths ---
-print("5 Running Scheme")
 # importing required libraries
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *
