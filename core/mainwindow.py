@@ -313,13 +313,28 @@ class MainWindow(QMainWindow):
         self.dl_action = QAction("Downloads", self, checkable=True, checked=True)
         self.bm_action = QAction("Bookmarks", self, checkable=True, checked=True)
         self.history_action = QAction("History", self, checkable=True, checked=True)
+        self.ai_action = QAction("AI Assistant", self, checkable=True, checked=True)
+        self.ai_menu = QMenu("AI Settings", self)
+        self.ai_clear_action = QAction("Clear Chat", self)
+        self.ai_float_action = QAction("Float Window", self)
+        self.ai_menu.addSeparator()
+        self.ai_menu.addAction(self.ai_clear_action)
+        self.ai_menu.addAction(self.ai_float_action)
+
         self.menu.addAction(self.dl_action)
         self.menu.addAction(self.bm_action)
         self.menu.addAction(self.history_action)
+        self.menu.addSeparator()
+        self.menu.addAction(self.ai_action)
+        self.menu.addMenu(self.ai_menu)
+
         self.settings_btn.setMenu(self.menu)
         self.dl_action.toggled.connect(self.toggle_downloads)
         self.bm_action.toggled.connect(self.toggle_bookmarks)
         self.history_action.toggled.connect(self.toggle_history)
+        self.ai_action.toggled.connect(self.toggle_ai_dock)
+        self.ai_clear_action.triggered.connect(self.clear_ai_chat)
+        self.ai_float_action.triggered.connect(self.float_ai_dock)
 
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.handle_ai_response)
@@ -365,6 +380,25 @@ class MainWindow(QMainWindow):
         profile.setHttpAcceptLanguage("en-US,en;q=0.9")
 
         self.profile = profile
+
+    def toggle_ai_dock(self, enabled):
+        self.ai_dock.setVisible(enabled)
+        self.save_settings()
+
+    def clear_ai_chat(self):
+        self.chat_container.deleteLater()
+
+        self.chat_container = QWidget()
+        self.chat_layout = QVBoxLayout()
+        self.chat_layout.setAlignment(Qt.AlignTop)
+        self.chat_container.setLayout(self.chat_layout)
+
+        self.chat_scroll.setWidget(self.chat_container)
+
+
+
+    def float_ai_dock(self):
+        self.ai_dock.setFloating(True)
 
 
     # --- history context menu ---
@@ -429,6 +463,7 @@ class MainWindow(QMainWindow):
             dl = settings.get("downloads_visible", True)
             bm = settings.get("bookmarks_visible", True)
             h = settings.get("history_visible", True)
+            ai = settings.get("ai_visible", True)
         else:
             dl, bm, h = False, False, False
 
@@ -438,13 +473,16 @@ class MainWindow(QMainWindow):
         self.download_dock.setVisible(dl)
         self.bookmarks_dock.setVisible(bm)
         self.history_dock.setVisible(h)
+        self.ai_action.setChecked(ai)
+        self.ai_dock.setVisible(ai)
 
     def save_settings(self):
         """Save settings to file."""
         settings = {
             "downloads_visible": self.dl_action.isChecked(),
             "bookmarks_visible": self.bm_action.isChecked(),
-            "history_visible": self.history_action.isChecked()
+            "history_visible": self.history_action.isChecked(),
+            "ai_visible": self.ai_action.isChecked()
         }
         with open("settings.json", "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=2)
@@ -565,9 +603,6 @@ class MainWindow(QMainWindow):
             self.history.append(entry)
             self.save_history()
             self.update_history_list()
-
-
-
 
     # --- navigation ---
     def navigate_home(self):
