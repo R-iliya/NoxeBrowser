@@ -584,7 +584,6 @@ class MainWindow(QMainWindow):
                 # treat it as a search
                 q = QUrl(f"https://google.com/search?q={text}")
         self.tabs.currentWidget().setUrl(q)
-        print(f"[NAV] Attempting: {q.toString()}")
 
     def update_urlbar(self, q, browser=None):
         if browser != self.tabs.currentWidget():
