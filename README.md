@@ -9,8 +9,7 @@
 ![GitHub license](https://img.shields.io/github/license/R-iliya/NoxeBrowser?style=flat\&color=4A2BE3)
 ![GitHub last commit](https://img.shields.io/github/last-commit/R-iliya/NoxeBrowser?style=flat\&color=4A2BE3)
 
-NoxeBrowser is wrote on python a fast paced modern language, achieving speed, performance and ease of use.
-The code is also modularized and something around 1500 lines of code is cleanly put together, making everything way easier to contribute, which we're clearly looking forward to.
+NoxeBrowser is a web browser wrote on python; a fast paced, modern language, achieving speed, performance and ease of use.
 
 NoxeBrowser is aiming to make a clean and secure environment for any user; Developer, Housewife, Gamer, Artist etc.
 
