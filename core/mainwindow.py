@@ -582,10 +582,10 @@ class MainWindow(QMainWindow):
         if os.path.exists("settings.json"):
             with open("settings.json", "r", encoding="utf-8") as f:
                 settings = json.load(f)
-            dl = settings.get("downloads_visible", True)
-            bm = settings.get("bookmarks_visible", True)
-            h = settings.get("history_visible", True)
-            ai = settings.get("ai_visible", True)
+            dl = settings.get("downloads_visible", False)
+            bm = settings.get("bookmarks_visible", False)
+            h = settings.get("history_visible", False)
+            ai = settings.get("ai_visible", False)
             force_dark = settings.get("force_dark_mode", False)
         else:
             dl, bm, h, ai, force_dark = True, True, True, True, False
