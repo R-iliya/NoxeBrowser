@@ -8,7 +8,7 @@ main_script = "main.py"
 icon_path = os.path.join("core", "icon.ico")
 extra_folders = ["core", "img"]  # folders to copy into dist and zip
 
-# Clean old builds
+# Clean previous builds
 for target in ["build", "dist", f"{project_name}.spec"]:
     if os.path.exists(target):
         print(f"🧹 Removing old {target}...")
@@ -17,7 +17,7 @@ for target in ["build", "dist", f"{project_name}.spec"]:
         else:
             os.remove(target)
 
-# Run PyInstaller
+# Build the executable with PyInstaller
 PyInstaller.__main__.run([
     main_script,
     "--noconfirm",
@@ -43,14 +43,14 @@ PyInstaller.__main__.run([
     "--strip",
 ])
 
-# Clear console and notify build completion
+# print build success message and instructions
 print("\n" + "="*50)
 print("✅ Build complete!")
 print(f"Check your dist folder for {project_name}.exe")
 print("="*50 + "\n")
 
 
-# Copy extra folders into dist
+# Copy extra folders (core and img) into dist for the executable to access, and then create a ZIP of the dist folder for easy distribution.
 dist_path = "dist"
 for folder in extra_folders:
     src = folder
@@ -60,13 +60,13 @@ for folder in extra_folders:
     shutil.copytree(src, dst, dirs_exist_ok=True)
     print(f"📁 Copied {folder} into dist folder")
 
-# Ask for version name and create ZIP
+# Ask for version name and create ZIP.
 print("📁 Enter version name (e.g., v1.0): ")
 vname = input(">>").strip()
 if vname:
     zip_filename = f"{project_name}_{vname}.zip"
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        # Walk only the dist folder, including copied core and img
+        # Walk only the dist folder, including copied core and img.
         for root, dirs, files in os.walk(dist_path):
             for file in files:
                 file_path = os.path.join(root, file)

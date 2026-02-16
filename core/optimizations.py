@@ -1,4 +1,6 @@
-# --- optimizations.py ---
+# optimizations.py - GPU detection, Chromium flags, and Windows tweaks for better performance and compatibility.
+
+# importing required libraries
 import os
 import sys
 import platform
@@ -8,15 +10,15 @@ import re
 
 DEBUG_MODE = False  # flip to True for verbose console output
 
-# --- Environment variables (always apply, silent) ---
+# ----- Environment variables (always apply, silent) -----
 os.environ.setdefault("QT_ENABLE_HIGHDPI_SCALING", "1")
 os.environ.setdefault("QT_SCALE_FACTOR_ROUNDING_POLICY", "PassThrough")
 os.environ.setdefault("QTWEBENGINE_REMOTE_DEBUGGING", "0")
 
-# Silence most Qt spam, keep real warnings
+# Suppress Qt warnings in release mode, enable verbose logging in debug mode
 os.environ["QT_LOGGING_RULES"] = "qt5ct.debug=false;*.warning=false"
 
-# --- Chromium flags (always apply) ---
+# ----- Chromium flags -----
 flags = [
     "--ignore-gpu-blocklist",
     "--enable-gpu-rasterization",
@@ -30,6 +32,7 @@ flags = [
     "--enable-parallel-downloading",
 ]
 
+# Platform-specific optimizations
 if platform.system() == "Linux":
     flags.append("--enable-features=VaapiVideoDecoder")
 
@@ -38,7 +41,9 @@ if platform.system() == "Windows":
 
 os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = " ".join(flags)
 
-# --- GPU detection (run always, print only in debug) ---
+# ----- GPU detection -----
+
+# Detect GPU(s) for informational purposes and potential future optimizations
 gpu = "Unknown GPU"
 if platform.system() == "Windows":
     try:
@@ -49,6 +54,8 @@ if platform.system() == "Windows":
     except Exception as e:
         gpu = f"Unknown GPU (failed: {e})"
 
+
+# Print GPU and applied optimizations in debug mode for transparency, but keep silent in release mode for a cleaner user experience.
 if DEBUG_MODE:
     gpu_lower = gpu.lower()
     if "nvidia" in gpu_lower:
@@ -63,7 +70,7 @@ if DEBUG_MODE:
     print(f"[Optimizations] Flags: {' '.join(flags)}")
     print(f"[GPU] Detected: {gpu}")
 
-# --- Process priority boost (always run, print only in debug) ---
+# ----- Process priority boost -----
 try:
     handle = ctypes.windll.kernel32.OpenProcess(0x0200 | 0x0400, False, os.getpid())
     ctypes.windll.kernel32.SetPriorityClass(handle, 0x00008000)  # ABOVE_NORMAL
@@ -73,7 +80,7 @@ except Exception as e:
     if DEBUG_MODE:
         print(f"[Optimizations] Priority skipped: {e}")
 
-# --- Windows DPI awareness (always run, print only in debug) ---
+# ----- Windows DPI awareness -----
 if platform.system() == "Windows":
     try:
         ctypes.windll.user32.SetProcessDpiAwarenessContext(-4)  # CONTEXT_PER_MONITOR_AWARE_V2
@@ -83,7 +90,7 @@ if platform.system() == "Windows":
         if DEBUG_MODE:
             print("[Optimizations] DPI awareness failed")
 
-# --- Verbose Chromium logs only in debug ---
+# ----- Verbose Chromium logs only in debug -----
 if DEBUG_MODE:
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] += " --enable-logging --v=1"
     print("[DEBUG] Verbose Chromium logging ON")

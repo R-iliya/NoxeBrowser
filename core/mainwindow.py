@@ -1,4 +1,5 @@
-# mainwindow.py - 
+# mainwindow.py - Main window and core functionality of Noxe Browser, including tabs, navigation, history, bookmarks, AI assistant, and settings management.
+
 # importing required libraries
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *
@@ -12,20 +13,22 @@ import os
 
 from core.browser import *
 
-# MainWindow class including Major parts of the code.
+# MainWindow class including Major parts of the code. 
 class MainWindow(QMainWindow):
 
     class WebEnginePage(QWebEnginePage):
+        # The init for web engine page.
         def __init__(self, profile, main_window=None):
             super().__init__(profile)
             self.main_window = main_window
             self.loadFinished.connect(self.on_load_finished)
         
+        # Function for when loading a page is finished.
         def on_load_finished(self, ok):
             if not ok:
                 url = self.url().toString()
 
-
+        # Accept navigation requests.
         def acceptNavigationRequest(self, url, _type, isMainFrame):
             if _type == QWebEnginePage.NavigationTypeLinkClicked:
                 modifiers = QApplication.keyboardModifiers()
@@ -45,31 +48,36 @@ class MainWindow(QMainWindow):
             
             return super().acceptNavigationRequest(url, _type, isMainFrame)
 
+        # Handle permission requests for browser.
         def handle_feature_permission_request(self, origin, feature):
             if feature == QWebEnginePage.Geolocation:
                 self.setFeaturePermission(origin, feature, QWebEnginePage.PermissionDeniedByUser)
 
-    # --- history ---
+    # ----- History -----
+
+    # Save history as a json file.
     def save_history(self):
         with open(self.history_file, "w", encoding="utf-8") as f:
             json.dump(self.history, f, indent=2, ensure_ascii=False)
 
+    # Update history list through additem.
     def update_history_list(self):
         self.history_list.clear()
         for h in self.history[-100:]:
             self.history_list.addItem(f'{h["title"]} - {h["url"]}')
-            
+
+    # Load history and update history list.
     def load_history(self):
         if os.path.exists(self.history_file):
             with open(self.history_file, "r", encoding="utf-8") as f:
                 self.history = json.load(f)
         self.update_history_list()
 
-
+    # Init for the main window.
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         
-	    # --- Define bookmarks & history file paths first ---
+	    # Define bookmarks & history file paths first
 
         import os
         import sys
@@ -92,7 +100,7 @@ class MainWindow(QMainWindow):
         self.bookmarks = []
         self.history = []
 
-        # profiles
+        # Set profiles including the normal and private profiles.
         profile = QWebEngineProfile.defaultProfile()
         profile.downloadRequested.connect(self.handle_download)
 
@@ -102,6 +110,7 @@ class MainWindow(QMainWindow):
         self.private_profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
         self.is_private = False
 
+        # Interceptor blocker request.
         interceptor = Blocker()
         if hasattr(profile, 'setUrlRequestInterceptor'):
             profile.setUrlRequestInterceptor(interceptor)
@@ -113,14 +122,14 @@ class MainWindow(QMainWindow):
         self.local_scheme_handler = LocalScheme()
         profile.installUrlSchemeHandler(b"local", self.local_scheme_handler)
 
-        # Injecting Parameters from browser for websites
+        # Injecting Parameters from browser for websites.
         set_privacy_overrides(profile, dark_mode=is_os_dark_mode())
 
-        # homepage
+        # Set up Homepage.
         self.local_home = "local://home"
         self.local_home_file = os.path.join(os.path.dirname(__file__), "home.html")  # optional, for editing/saving
 
-        # tab widget
+        # Set up the tabs widget.
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
         self.tabs.tabBarDoubleClicked.connect(self.tab_open_doubleclick)
@@ -131,7 +140,7 @@ class MainWindow(QMainWindow):
         self.tabs.setMovable(True)
         self.tabs.setDocumentMode(True)  
 
-        # shortcuts
+        # Set up the shortcuts and their actions.
         QShortcut(QKeySequence("Ctrl+T"), self, activated=self.add_new_tab)
         QShortcut(QKeySequence("Ctrl+W"), self, activated=lambda: self.close_current_tab(self.tabs.currentIndex()))
         QShortcut(QKeySequence("Ctrl+R"), self, activated=lambda: self.tabs.currentWidget().reload())
@@ -144,11 +153,11 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("F11"), self, activated=self.toggle_fullscreen)
         QShortcut(QKeySequence("F12"), self, activated=self.toggle_devtools)
 
-        # status bar
+        # Set up the status bar.
         self.status = QStatusBar()
         self.setStatusBar(self.status)
 
-        # navigation toolbar
+        # Set up the navigation toolbar.
         self.navtb = QToolBar("Navigation")
         self.addToolBar(self.navtb)
 
@@ -166,36 +175,44 @@ class MainWindow(QMainWindow):
         }
         """)
 
+        # Set up the back button on the navigation toolbar.
         back_btn = QAction(QIcon('./img/back.svg'), '', self)
         back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
         self.navtb.addAction(back_btn)
 
+        # Set up the next button on the navigation toolbar.
         next_btn = QAction(QIcon('./img/forward.svg'), '', self)
         next_btn.triggered.connect(lambda: self.tabs.currentWidget().forward())
         self.navtb.addAction(next_btn)
 
+        # Set up the add new tab button on the navigation toolbar.
         tab_btn = QAction(QIcon('./img/add.svg'), '', self)
         tab_btn.triggered.connect(lambda: self.add_new_tab())
         self.navtb.addAction(tab_btn)
 
+        # Set up the reload button on the navigation toolbar.
         reload_btn = QAction(QIcon('./img/reload.svg'), '', self)
         reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
         self.navtb.addAction(reload_btn)
 
+        # Set up the home button on the navigation toolbar.
         home_btn = QAction(QIcon('./img/home.svg'), '', self)
         home_btn.triggered.connect(self.navigate_home)
         self.navtb.addAction(home_btn)
+
         self.navtb.addSeparator()
 
+        # Set up the URL bar on the navigation toolbar.
         self.urlbar = QLineEdit()
         self.urlbar.returnPressed.connect(self.navigate_to_url)
         self.navtb.addWidget(self.urlbar)
 
+        # Set up the stop button on the navigation toolbar.
         stop_btn = QAction("Stop", self)
         stop_btn.triggered.connect(lambda: self.tabs.currentWidget().stop())
         self.navtb.addAction(stop_btn)
 
-        # AI Chat Dock
+        # AI Chat Dock.
         self.ai_dock = QDockWidget("Noxe AI Assistant", self)
         self.ai_dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
         self.ai_dock.setFixedWidth(350)
@@ -208,13 +225,13 @@ class MainWindow(QMainWindow):
         """)
         
 
-
+        # Set up the AI Widget as a QWidget.
         self.ai_widget = QWidget()
         self.ai_layout = QVBoxLayout()
         self.ai_layout.setSpacing(5)
         self.ai_widget.setLayout(self.ai_layout)
 
-        # Scroll area for chat bubbles
+        # Scroll area for chat bubbles.
         self.chat_scroll = QScrollArea()
         self.chat_scroll.setWidgetResizable(True)
         self.chat_container = QWidget()
@@ -223,6 +240,7 @@ class MainWindow(QMainWindow):
         self.chat_container.setLayout(self.chat_layout)
         self.chat_scroll.setWidget(self.chat_container)
 
+        # Input text box for the AI Chat.
         self.ai_input = QLineEdit()
         self.ai_input.setPlaceholderText("Ask NoxeAI…")
         self.ai_input.returnPressed.connect(self.send_ai_query)
@@ -234,13 +252,14 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.ai_dock)
         self.ai_dock.setVisible(True)
 
-        # Toggle AI Button
+        # AI Toggle Button that toggles visiblity of the AI chat dock.
         toggle_ai_btn = QAction("AI", self)
         toggle_ai_btn.setCheckable(True)
         toggle_ai_btn.setChecked(True)
         toggle_ai_btn.triggered.connect(lambda checked: self.ai_dock.setVisible(checked))
         self.navtb.addAction(toggle_ai_btn)
 
+        # Title bar for the AI chat dock.
         self.ai_dock.setTitleBarWidget(QWidget())
         title = QLabel("NoxeAI 🌀")
         title.setAlignment(Qt.AlignCenter)
@@ -275,7 +294,7 @@ class MainWindow(QMainWindow):
 
 
 
-        # Download Manager Dock
+        # Download Manager Dock.
         self.download_dock = QDockWidget("Downloads", self)
         self.download_dock.setAllowedAreas(Qt.RightDockWidgetArea)
         self.download_dock.setFeatures(
@@ -293,11 +312,12 @@ class MainWindow(QMainWindow):
         self.download_dock.resize(700, 140)
         self.download_dock.setTitleBarWidget(QWidget())
 
-        self.download_dock.hide()  # start 
+        self.download_dock.hide()  # hide on start
         
+        # Install event filter. Later used for interacting with visiblity of the Download Manager Dock.
         QApplication.instance().installEventFilter(self)
 
-        # Bookmarks Dock
+        # Bookmarks Dock.
         self.bookmarks_dock = QDockWidget("Bookmarks", self)
         self.bookmarks_list = BookmarkListWidget(self, self.bookmarks_dock)
         self.bookmarks_list.setSelectionMode(QListWidget.SingleSelection)
@@ -310,7 +330,7 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.RightDockWidgetArea, self.bookmarks_dock)
         self.load_bookmarks()
 
-        # History Dock
+        # History Dock.
         self.history_dock = QDockWidget("History", self)
         self.history_list = QListWidget()
         self.history_dock.setWidget(self.history_list)
@@ -319,39 +339,51 @@ class MainWindow(QMainWindow):
         self.history_list.customContextMenuRequested.connect(self.history_context_menu)
 
         
-        # First load history from file
+        # First load history from file.
         self.load_history()
-        # Then update the list widget
+        # Next update the list widget.
         self.update_history_list()
 
-        # Settings Dropdown
+        # Settings Dropdown.
         self.settings_btn = QPushButton("⁝")
         self.settings_btn.setFixedSize(40, 30)
         self.navtb.addWidget(self.settings_btn)
         self.menu = QMenu()
+
+        # Add Startup visiblity options to the Settings Dropdown.
         self.dl_action = QAction("Downloads", self, checkable=True, checked=True)
         self.bm_action = QAction("Bookmarks", self, checkable=True, checked=True)
         self.history_action = QAction("History", self, checkable=True, checked=True)
         self.ai_action = QAction("AI Assistant", self, checkable=True, checked=True)
+
+        # Add AI Settings sub menu to the Settings Dropdown.
         self.ai_menu = QMenu("AI Settings", self)
         self.ai_clear_action = QAction("Clear Chat", self)
         self.ai_float_action = QAction("Float Window", self)
+
+        # Add Private Session option to the Settings Dropdown.
         self.private_action = QAction("Private Session", self, checkable=True)
 
+        # Add options to the AI Settings sub menu.
         self.ai_menu.addSeparator()
         self.ai_menu.addAction(self.ai_clear_action)
         self.ai_menu.addAction(self.ai_float_action)
 
+        # Add options to the Settings Dropdown.
         self.menu.addAction(self.dl_action)
         self.menu.addAction(self.bm_action)
         self.menu.addAction(self.history_action)
         self.menu.addSeparator()
         self.menu.addAction(self.ai_action)
+
+        # Add AI Settings sub menu to the Settings Dropdown.
         self.menu.addMenu(self.ai_menu)
 
+        # Add Private Session option to the Settings Dropdown.
         self.menu.addSeparator()
         self.menu.addAction(self.private_action)
 
+        # Connect the actions to their respective functions and set the menu for the settings button.
         self.settings_btn.setMenu(self.menu)
         self.dl_action.toggled.connect(self.toggle_downloads)
         self.bm_action.toggled.connect(self.toggle_bookmarks)
@@ -361,11 +393,12 @@ class MainWindow(QMainWindow):
         self.ai_float_action.triggered.connect(self.float_ai_dock)
         self.private_action.toggled.connect(self.toggle_private_mode)
 
+        # Network manager for handling the AI responses.
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.handle_ai_response)
 
+        # set the normal and private stylesheets.
         self.normal_stylesheet = ""
-
         self.private_stylesheet = """
             QDockWidget {
                 background-color: #111115;
@@ -408,17 +441,17 @@ class MainWindow(QMainWindow):
             }
             """
 
-        # load tabs
+        # Load tabs from stored file.
         self.load_tab_order()
 
-        # create first tab
+        # If no tabs avaible, create the first tab.
         if self.tabs.count() == 0:
             self.add_new_tab(QUrl("local://home"), "Home")
 
-        # load settings 
+        # Load settings from stored file.
         self.load_settings()
 
-        # show window
+        # Show the browser's window.
         self.setWindowTitle("Noxe Browser")
         self.showMaximized()
         icon = QIcon("core/icon.ico")
@@ -428,6 +461,7 @@ class MainWindow(QMainWindow):
             app_id = u"noxe.browser.1.6"
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
 
+        # Set profile's settings.
         profile.setCachePath("./browser/cache")
         profile.setPersistentStoragePath("./browser/storage")
         profile.setHttpCacheType(QWebEngineProfile.DiskHttpCache)
@@ -451,10 +485,12 @@ class MainWindow(QMainWindow):
 
         self.download_dock.hide()
 
+    # Toggle AI Chat Dock.
     def toggle_ai_dock(self, enabled):
         self.ai_dock.setVisible(enabled)
         self.save_settings()
 
+    # Clear AI Chat's history.
     def clear_ai_chat(self):
         self.chat_container.deleteLater()
 
@@ -465,9 +501,11 @@ class MainWindow(QMainWindow):
 
         self.chat_scroll.setWidget(self.chat_container)
 
+    # Float AI Chat Dock.
     def float_ai_dock(self):
         self.ai_dock.setFloating(True)
 
+    # Toggle the Private Session.
     def toggle_private_mode(self, enabled):
         self.is_private = enabled
 
@@ -481,44 +519,49 @@ class MainWindow(QMainWindow):
             self.status.showMessage("Private session disabled.", 2000)
 
 
-    # --- history context menu ---
+    # History Context Menu.
     def history_context_menu(self, pos):
         item = self.history_list.itemAt(pos)
         menu = QMenu()
 
-        # Add actions
+        # Add actions.
         delete_all_action = QAction("Delete All History", self)
         delete_all_action.triggered.connect(self.delete_all_history)
         menu.addAction(delete_all_action)
 
+        # Delete the entry selected.
         if item:
             delete_item_action = QAction("Delete This Entry", self)
             delete_item_action.triggered.connect(lambda: self.delete_history_item(item))
             menu.addAction(delete_item_action)
 
+        # Delete entries from the last 7 days.
         delete_7days_action = QAction("Delete Last 7 Days", self)
         delete_7days_action.triggered.connect(lambda: self.delete_history_days(7))
         menu.addAction(delete_7days_action)
 
+        # Delete entries from the last 30 days.
         delete_30days_action = QAction("Delete Last 30 Days", self)
         delete_30days_action.triggered.connect(lambda: self.delete_history_days(30))
         menu.addAction(delete_30days_action)
 
-        # Show menu
+        # Show menu.
         menu.exec_(self.history_list.mapToGlobal(pos))
         
-	# --- delete helpers ---
+	# Delete all history items.
     def delete_all_history(self):
         self.history.clear()
         self.save_history()
         self.update_history_list()
         
+    # Delete history item.
     def delete_history_item(self, item):
         url_text = item.text().split(" - ", 1)[1]
         self.history = [h for h in self.history if h["url"] != url_text]
         self.save_history()
         self.update_history_list()
         
+    # Delete history items by days.
     def delete_history_days(self, days):
         try:
             from datetime import datetime, timedelta
@@ -534,32 +577,30 @@ class MainWindow(QMainWindow):
             print(f"delete_history_days({days}) failed: {e}")
 
         
-    # --- SETTINGS PERSISTENCE ---
+    # Load settings from stored json file.
     def load_settings(self):
         """Load settings from file."""
         if os.path.exists("settings.json"):
             with open("settings.json", "r") as f:
                 settings = json.load(f)
-            dl = settings.get("downloads_visible", True)
             bm = settings.get("bookmarks_visible", True)
             h = settings.get("history_visible", True)
             ai = settings.get("ai_visible", True)
         else:
             dl, bm, h = False, False, False
 
-        self.dl_action.setChecked(dl)
+        # Set settings from load
         self.bm_action.setChecked(bm)
         self.history_action.setChecked(h)
-        self.download_dock.setVisible(dl)
         self.bookmarks_dock.setVisible(bm)
         self.history_dock.setVisible(h)
         self.ai_action.setChecked(ai)
         self.ai_dock.setVisible(ai)
 
+    # Save settings to json file.
     def save_settings(self):
         """Save settings to file."""
         settings = {
-            "downloads_visible": self.dl_action.isChecked(),
             "bookmarks_visible": self.bm_action.isChecked(),
             "history_visible": self.history_action.isChecked(),
             "ai_visible": self.ai_action.isChecked()
@@ -567,11 +608,12 @@ class MainWindow(QMainWindow):
         with open("settings.json", "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=2)
         
-    # --- docks ---
+    # Toggle Downloads Dock.
     def toggle_downloads(self, enabled):
         self.download_dock.setVisible(enabled)
         self.save_settings()
 
+    # Set positions for the Downloads Dock.
     def position_download_dock(self):
         if not self.download_dock.isFloating():
             return
@@ -586,6 +628,7 @@ class MainWindow(QMainWindow):
 
         self.download_dock.move(x, y)
 
+    # EventFilter for visiblity of the Download Dock.
     def eventFilter(self, obj, event):
         if event.type() == QEvent.MouseButtonPress:
             if self.download_dock.isVisible():
@@ -593,19 +636,23 @@ class MainWindow(QMainWindow):
                     self.download_dock.hide()
         return super().eventFilter(obj, event)
 
+    # Toggle Bookmarks Dock.
     def toggle_bookmarks(self, enabled):
         self.bookmarks_dock.setVisible(enabled)
         self.save_settings()
     
+    # Toggle History Dock.
     def toggle_history(self, enabled):
         self.history_dock.setVisible(enabled)
         self.save_settings()
 
-    # --- tabs ---
+    # ----- Tabs -----
+    # Add new tab.
     def add_new_tab(self, qurl=None, label="New Tab"):
 
         browser = QWebEngineView()
 
+        # Check if in Private Session as sets the page.
         if self.is_private:
             page = MainWindow.WebEnginePage(self.private_profile, self)
         else:
@@ -625,6 +672,7 @@ class MainWindow(QMainWindow):
         browser.setPage(page)
         page.featurePermissionRequested.connect(page.handle_feature_permission_request)
         
+        # Set the Browser's Settings.
         browser.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         browser.settings().setAttribute(QWebEngineSettings.FullScreenSupportEnabled, True)
         browser.settings().setAttribute(QWebEngineSettings.JavascriptCanOpenWindows, True)
@@ -634,10 +682,10 @@ class MainWindow(QMainWindow):
         browser.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         browser.setContentsMargins(0, 0, 0, 0)
 
+        # Smooth the scrollbar behavior. 
         browser.page().runJavaScript("""
             document.documentElement.style.scrollBehavior = 'smooth';
         """)
-
 
         browser.iconChanged.connect(lambda icon, browser=browser: self.update_tab_icon(browser, icon))
 
@@ -645,16 +693,10 @@ class MainWindow(QMainWindow):
             qurl = QUrl(self.local_home)
         browser.setUrl(qurl)
 
-        # container = QWidget()
-        # layout = QVBoxLayout()
-        # layout.setContentsMargins(0, 0, 0, 0)
-        # layout.addWidget(browser)
-        # container.setLayout(layout)
-
         i = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(i)
 
-        # --- CONNECT SIGNALS ---
+        # Browser Connection signals.
         browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.title()))
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
         browser.loadFinished.connect(lambda ok, browser=browser: self.track_history(browser))
@@ -662,7 +704,7 @@ class MainWindow(QMainWindow):
     
         return browser
 
-
+    # Update tab title.
     def update_tab_title(self, title, browser):
         index = self.tabs.indexOf(browser)
         if index != -1:
@@ -671,15 +713,18 @@ class MainWindow(QMainWindow):
         if browser == self.tabs.currentWidget():
             self.setWindowTitle(f"{title} - Noxe Browser")
 
+    # Tab open behavior through doubleclick.
     def tab_open_doubleclick(self, i):
         if i == -1:
             self.add_new_tab()
 
+    # Update URLBar and title from current tab.
     def current_tab_changed(self, i):
         qurl = self.tabs.currentWidget().url()
         self.update_urlbar(qurl, self.tabs.currentWidget())
         self.update_title(self.tabs.currentWidget())
 
+    # Close current tab.
     def close_current_tab(self, i):
         if self.tabs.count() < 2:
             return
@@ -691,12 +736,14 @@ class MainWindow(QMainWindow):
             self.last_closed_tabs.pop(0)
         self.tabs.removeTab(i)
 
+    # Update the title bar.
     def update_title(self, browser):
         if browser != self.tabs.currentWidget():
             return
         title = self.tabs.currentWidget().page().title()
         self.setWindowTitle(f"{title} - Noxe Browser")
       
+    # Track history and save.
     def track_history(self, browser):
         if self.is_private:
             return
@@ -713,11 +760,13 @@ class MainWindow(QMainWindow):
             self.save_history()
             self.update_history_list()
 
-    # --- navigation ---
+    # ----- Navigations -----
+
+    # Navigate to home.
     def navigate_home(self):
         self.tabs.currentWidget().setUrl(QUrl("local://home"))
 
-
+    # Navigate to URL from URLBar. Also detects if the text in URLBar is a link or a search.
     def navigate_to_url(self):
         text = self.urlbar.text()
         q = QUrl(text)
@@ -729,6 +778,7 @@ class MainWindow(QMainWindow):
                 q = QUrl(f"https://google.com/search?q={text}")
         self.tabs.currentWidget().setUrl(q)
 
+    # Update the URLBar's text to current URL.
     def update_urlbar(self, q, browser=None):
         if browser != self.tabs.currentWidget():
             return
@@ -740,7 +790,9 @@ class MainWindow(QMainWindow):
             url, title = self.last_closed_tabs.pop()
             self.add_new_tab(QUrl(url), title)
 
-    # --- bookmarks ---
+    # ----- Bookmarks -----
+
+    # Add the given URL as a Bookmark and saves.
     def add_bookmark(self):
         browser = self.tabs.currentWidget()
         url = browser.url().toString()
@@ -751,11 +803,12 @@ class MainWindow(QMainWindow):
             self.bookmarks_list.addItem(f"{title} - {url}")
             self.save_bookmarks()  # save only once
             
-
+    # Open the selected Bookmark on tab.
     def open_bookmark(self, item):
         url = item.text().split(" - ", 1)[1]
         self.tabs.currentWidget().setUrl(QUrl(url))
 
+    # Context menu for Bookmarks.
     def bookmark_context_menu(self, pos):
         item = self.bookmarks_list.itemAt(pos)
         if not item:
@@ -766,6 +819,7 @@ class MainWindow(QMainWindow):
         menu.addAction(delete_action)
         menu.exec_(self.bookmarks_list.mapToGlobal(pos))
 
+    #  Delete Selected Bookmark.
     def delete_bookmark(self, item):
         index = self.bookmarks_list.row(item)
         self.bookmarks_list.takeItem(index)
@@ -774,6 +828,7 @@ class MainWindow(QMainWindow):
         self.bookmarks = [b for b in self.bookmarks if QUrl(b["url"]).toString() != url_norm]
         self.save_bookmarks()
 
+    # Load Bookmarks from stored json file.
     def load_bookmarks(self):
         if os.path.exists(self.bookmarks_file):
             with open(self.bookmarks_file, "r") as f:
@@ -782,18 +837,21 @@ class MainWindow(QMainWindow):
         for b in self.bookmarks:
             self.bookmarks_list.addItem(f'{b["title"]} - {b["url"]}')
 
+    # Save Bookmarks to json file.
     def save_bookmarks(self):
         # always overwrite bookmarks.json, even if empty
         with open(self.bookmarks_file, "w", encoding="utf-8") as f:
             json.dump(self.bookmarks, f, indent=2, ensure_ascii=False)
 
+    # ----- AI Assistant -----
 
-
+    # Send AI Query if prompt avaible. Uses Dock's Input text box's text as prompt.
     def send_ai_query(self):
         prompt = self.ai_input.text().strip()
         if not prompt:
             return
 
+        # Clears the input text box after send.
         self.ai_input.clear()
         self.add_user_bubble(prompt)
 
@@ -819,7 +877,7 @@ class MainWindow(QMainWindow):
         data = QByteArray(json.dumps(body).encode("utf-8"))
         self.network_manager.post(request, data)
 
-
+    # Handle AI responses.
     def handle_ai_response(self, reply):
         raw = bytes(reply.readAll()).decode("utf-8")
         if reply.error():
@@ -855,6 +913,7 @@ class MainWindow(QMainWindow):
         self.chat_layout.addLayout(hbox)
         self.chat_scroll.verticalScrollBar().setValue(self.chat_scroll.verticalScrollBar().maximum())
 
+    # Add AI Bubble.
     def add_ai_bubble(self, text):
         lbl = QLabel(text)
         lbl.setStyleSheet("""
@@ -913,13 +972,16 @@ class MainWindow(QMainWindow):
 
 
 
-    # --- fullscreen & devtools ---
+    # ----- Fullscreen & DevTools -----
+
+    # Toggle fullscreen mode.
     def toggle_fullscreen(self):
         if self.isFullScreen():
             self.showNormal()
         else:
             self.showFullScreen()
 
+    # Toggle DevTools.
     def toggle_devtools(self):
         browser = self.tabs.currentWidget()
         if hasattr(browser, 'devtools'):
@@ -936,18 +998,21 @@ class MainWindow(QMainWindow):
         dev_view.show()
         browser.devtools = dev_view  # still keep reference
         
+    # Drag Enter Event.
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
             event.ignore()
     
+    # Drag Move Event.
     def dragMoveEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
         else:
             event.ignore()
     
+    # Drag's Drop Event.
     def dropEvent(self, event):
         if event.mimeData().hasUrls():
             for url in event.mimeData().urls():
@@ -965,7 +1030,9 @@ class MainWindow(QMainWindow):
         else:
             event.ignore()
 
-    # --- downloads ---
+    # ----- Downloads System -----
+
+    # Handle download.
     def handle_download(self, download):
         # Auto-open download dock
         if not self.download_dock.isVisible():
@@ -1001,7 +1068,9 @@ class MainWindow(QMainWindow):
             print("Download failed:", e)
             download.cancel()
 
-    # --- tab save/load ---
+    # ----- Tab Save & Load System ---
+
+    # Save Tabs to json file.
     def save_tab_order(self):
         try:
             order = []
@@ -1015,6 +1084,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print("Failed to save tab order:", e)
 
+    # Load tab orders at startup.
     def load_tab_order(self):
         if os.path.exists("tabs.json"):
             try:
@@ -1029,7 +1099,8 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 print("Failed to load tab order:", e)
       
-    # --- save on exit ---
+
+    # Close event. Saves Bookmarks, Settings, History and Tab order on exit and cleans up cache.
     def closeEvent(self, event):
         try:
             if not self.is_private:
@@ -1049,12 +1120,14 @@ class MainWindow(QMainWindow):
 
         event.accept()
 
+    # Update tab icon.
     def update_tab_icon(self, browser, icon):
         index = self.tabs.indexOf(browser)
         if index != -1:
             if not icon.isNull():
                 self.tabs.setTabIcon(index, icon)
 
+    # Show event to position the download dock and update titlebar on Windows.
     def showEvent(self, event):
         super().showEvent(event)
         self.position_download_dock()

@@ -1,24 +1,15 @@
-# --- Main Code ---
+# main.py - Main entry point for Noxe Browser, initializing the application, applying optimizations, and launching the main window.
+
 # importing required libraries
-from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *
 from functools import partial
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import subprocess
-import platform
-import winreg
 import ctypes
-import json
 import sys
 import os
-from PyQt5.QtWebEngineCore import (
-    QWebEngineUrlRequestInterceptor,
-    QWebEngineUrlSchemeHandler,
-    QWebEngineUrlScheme,
-)
 
 # importing browser modules
 from core.optimizations import *
@@ -28,7 +19,7 @@ from core.scheme import *
 from core.browser import *
 from core.mainwindow import *
 
-
+# Set DPI awareness on Windows for better scaling on high-DPI displays
 if sys.platform.startswith("win"):
     try:
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -38,6 +29,7 @@ if sys.platform.startswith("win"):
         if __debug__:
             print("DPI awareness failed:", e)
 
+# Register custom URL scheme for internal resources (e.g., newtab page)
 def resource_path(relative_path):
     """Get absolute path to resource, works for dev and PyInstaller exe."""
     try:
@@ -47,14 +39,14 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-
 print("\n[Browser Loaded]")
 if __debug__:
     print("GPU:", gpu.strip())
     print("QT_OPENGL:", os.environ.get('QT_OPENGL'))
     print(f"Flags: {len(flags)} applied")
 
-# ---- MAIN ENTRYPOINT ----
+# ----- MAIN ENTRYPOINT -----
+# Initialize the application, apply optimizations, and launch the main window.
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
