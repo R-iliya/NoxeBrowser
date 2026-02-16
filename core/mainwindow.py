@@ -353,7 +353,7 @@ class MainWindow(QMainWindow):
         # Add Startup visiblity options to the Settings Dropdown.
         self.dl_action = QAction("Downloads", self, checkable=True, checked=True)
         self.bm_action = QAction("Bookmarks", self, checkable=True, checked=True)
-        self.history_action = QAction("History", self, checkable=True, checked=True)
+        self.hist_action = QAction("History", self, checkable=True, checked=True)
         self.ai_action = QAction("AI Assistant", self, checkable=True, checked=True)
 
         # Add AI Settings sub menu to the Settings Dropdown.
@@ -372,7 +372,7 @@ class MainWindow(QMainWindow):
         # Add options to the Settings Dropdown.
         self.menu.addAction(self.dl_action)
         self.menu.addAction(self.bm_action)
-        self.menu.addAction(self.history_action)
+        self.menu.addAction(self.hist_action)
         self.menu.addSeparator()
         self.menu.addAction(self.ai_action)
 
@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
         self.settings_btn.setMenu(self.menu)
         self.dl_action.toggled.connect(self.toggle_downloads)
         self.bm_action.toggled.connect(self.toggle_bookmarks)
-        self.history_action.toggled.connect(self.toggle_history)
+        self.hist_action.toggled.connect(self.toggle_history)
         self.ai_action.toggled.connect(self.toggle_ai_dock)
         self.ai_clear_action.triggered.connect(self.clear_ai_chat)
         self.ai_float_action.triggered.connect(self.float_ai_dock)
@@ -610,7 +610,7 @@ class MainWindow(QMainWindow):
         """Save settings to file."""
         settings = {
             "bookmarks_visible": self.bm_action.isChecked(),
-            "history_visible": self.history_action.isChecked(),
+            "history_visible": self.hist_action.isChecked(),
             "ai_visible": self.ai_action.isChecked()
         }
         with open("settings.json", "w", encoding="utf-8") as f:
