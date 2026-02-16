@@ -579,23 +579,31 @@ class MainWindow(QMainWindow):
         
     # Load settings from stored json file.
     def load_settings(self):
-        """Load settings from file."""
         if os.path.exists("settings.json"):
-            with open("settings.json", "r") as f:
+            with open("settings.json", "r", encoding="utf-8") as f:
                 settings = json.load(f)
+            dl = settings.get("downloads_visible", True)
             bm = settings.get("bookmarks_visible", True)
             h = settings.get("history_visible", True)
             ai = settings.get("ai_visible", True)
+            force_dark = settings.get("force_dark_mode", False)
         else:
-            dl, bm, h = False, False, False
+            dl, bm, h, ai, force_dark = True, True, True, True, False
 
-        # Set settings from load
-        self.bm_action.setChecked(bm)
-        self.history_action.setChecked(h)
+        # Apply visibility.
+        self.download_dock.setVisible(dl)
         self.bookmarks_dock.setVisible(bm)
         self.history_dock.setVisible(h)
-        self.ai_action.setChecked(ai)
         self.ai_dock.setVisible(ai)
+
+        # Sync quick dropdown toggles.
+        self.dl_action.setChecked(dl)
+        self.bm_action.setChecked(bm)
+        self.hist_action.setChecked(h)
+        self.ai_action.setChecked(ai)
+
+        # Apply force dark.
+        set_privacy_overrides(self.profile, dark_mode=force_dark)
 
     # Save settings to json file.
     def save_settings(self):
