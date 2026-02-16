@@ -588,7 +588,7 @@ class MainWindow(QMainWindow):
             ai = settings.get("ai_visible", False)
             force_dark = settings.get("force_dark_mode", False)
         else:
-            dl, bm, h, ai, force_dark = True, True, True, True, False
+            dl, bm, h, ai, force_dark = False, False, False, False, False
 
         # Apply visibility.
         self.download_dock.setVisible(dl)
