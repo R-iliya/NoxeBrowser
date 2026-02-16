@@ -16,8 +16,8 @@ from core.browser import *
 class MainWindow(QMainWindow):
 
     class WebEnginePage(QWebEnginePage):
-        def __init__(self, parent=None, main_window=None):
-            super().__init__(parent)
+        def __init__(self, profile, main_window=None):
+            super().__init__(profile)
             self.main_window = main_window
             self.loadFinished.connect(self.on_load_finished)
         
@@ -95,6 +95,12 @@ class MainWindow(QMainWindow):
         # profiles
         profile = QWebEngineProfile.defaultProfile()
         profile.downloadRequested.connect(self.handle_download)
+
+        self.normal_profile = QWebEngineProfile.defaultProfile()
+        self.private_profile = QWebEngineProfile(None)
+        self.private_profile.setHttpCacheType(QWebEngineProfile.MemoryHttpCache)
+        self.private_profile.setPersistentCookiesPolicy(QWebEngineProfile.NoPersistentCookies)
+        self.is_private = False
 
         interceptor = Blocker()
         if hasattr(profile, 'setUrlRequestInterceptor'):
@@ -317,6 +323,8 @@ class MainWindow(QMainWindow):
         self.ai_menu = QMenu("AI Settings", self)
         self.ai_clear_action = QAction("Clear Chat", self)
         self.ai_float_action = QAction("Float Window", self)
+        self.private_action = QAction("Private Session", self, checkable=True)
+
         self.ai_menu.addSeparator()
         self.ai_menu.addAction(self.ai_clear_action)
         self.ai_menu.addAction(self.ai_float_action)
@@ -328,6 +336,9 @@ class MainWindow(QMainWindow):
         self.menu.addAction(self.ai_action)
         self.menu.addMenu(self.ai_menu)
 
+        self.menu.addSeparator()
+        self.menu.addAction(self.private_action)
+
         self.settings_btn.setMenu(self.menu)
         self.dl_action.toggled.connect(self.toggle_downloads)
         self.bm_action.toggled.connect(self.toggle_bookmarks)
@@ -335,10 +346,54 @@ class MainWindow(QMainWindow):
         self.ai_action.toggled.connect(self.toggle_ai_dock)
         self.ai_clear_action.triggered.connect(self.clear_ai_chat)
         self.ai_float_action.triggered.connect(self.float_ai_dock)
+        self.private_action.toggled.connect(self.toggle_private_mode)
 
         self.network_manager = QNetworkAccessManager(self)
         self.network_manager.finished.connect(self.handle_ai_response)
 
+        self.normal_stylesheet = ""
+
+        self.private_stylesheet = """
+            QDockWidget {
+                background-color: #111115;
+                border: 2px solid #22222e;
+                border-radius: 8px;
+            }
+
+            QWidget {
+                background-color: #0d0d12;
+                color: #e4e4e4;
+            }
+
+            QLineEdit {
+                background-color: #15151c;
+                border: 1px solid #2a2a35;
+                padding: 6px;
+                border-radius: 6px;
+                color: #ffffff;
+            }
+
+            QScrollArea {
+                background: transparent;
+                border: none;
+            }
+
+            QScrollBar:vertical {
+                background: #0f0f14;
+                width: 8px;
+                margin: 4px;
+                border-radius: 4px;
+            }
+
+            QScrollBar::handle:vertical {
+                background: #2a2a35;
+                border-radius: 4px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background: #3a3a48;
+            }
+            """
 
         # load tabs
         self.load_tab_order()
@@ -395,10 +450,20 @@ class MainWindow(QMainWindow):
 
         self.chat_scroll.setWidget(self.chat_container)
 
-
-
     def float_ai_dock(self):
         self.ai_dock.setFloating(True)
+
+    def toggle_private_mode(self, enabled):
+        self.is_private = enabled
+
+        if enabled:
+            self.setWindowTitle("Noxe Browser — Private Mode")
+            self.setStyleSheet(self.private_stylesheet)
+            self.status.showMessage("Private session active — nothing will be saved.", 3000)
+        else:
+            self.setWindowTitle("Noxe Browser")
+            self.setStyleSheet(self.normal_stylesheet)
+            self.status.showMessage("Private session disabled.", 2000)
 
 
     # --- history context menu ---
@@ -504,17 +569,23 @@ class MainWindow(QMainWindow):
     def add_new_tab(self, qurl=None, label="New Tab"):
 
         browser = QWebEngineView()
+
+        if self.is_private:
+            page = MainWindow.WebEnginePage(self.private_profile, self)
+        else:
+            page = MainWindow.WebEnginePage(self.normal_profile, self)
+
         patch_js = """
         if (window.matchMedia) {
             const mq = window.matchMedia('(prefers-color-scheme: dark)');
             if (!mq.addEventListener) { mq.addEventListener = mq.addListener; }
         }
         """
+
         browser.page().runJavaScript(patch_js)
         browser.setAttribute(Qt.WA_OpaquePaintEvent, False)
         browser.setUpdatesEnabled(True)
 
-        page = MainWindow.WebEnginePage(parent=browser, main_window=self)
         browser.setPage(page)
         page.featurePermissionRequested.connect(page.handle_feature_permission_request)
         
@@ -591,6 +662,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{title} - Noxe Browser")
       
     def track_history(self, browser):
+        if self.is_private:
+            return
         url = browser.url().toString()
         title = browser.page().title()
         from datetime import datetime
@@ -916,14 +989,16 @@ class MainWindow(QMainWindow):
     # --- save on exit ---
     def closeEvent(self, event):
         try:
-            self.save_bookmarks()   # save bookmarks before closing
-            self.save_settings()    # save settings before closing
-            self.save_history()     # save history before closing
-            self.save_tab_order()    # save tab order before closing
-            print("exitting with normal save;")
+            if not self.is_private:
+                self.save_bookmarks()   # save bookmarks before closing
+                self.save_settings()    # save settings before closing
+                self.save_history()     # save history before closing
+                self.save_tab_order()    # save tab order before closing
+                print("exitting with normal save;")
+            else:
+                print("exitting without save;")
         except Exception:
             print("exitting with bad save;")
-
         try:
             cleanup_cache(self.profile)
         except Exception:
