@@ -448,9 +448,6 @@ class MainWindow(QMainWindow):
         if self.tabs.count() == 0:
             self.add_new_tab(QUrl("local://home"), "Home")
 
-        # Load settings from stored file.
-        self.load_settings()
-
         # Show the browser's window.
         self.setWindowTitle("Noxe Browser")
         self.showMaximized()
@@ -484,6 +481,9 @@ class MainWindow(QMainWindow):
         self.profile = profile
 
         self.download_dock.hide()
+
+        # Load settings from stored file.
+        self.load_settings()
 
     # Toggle AI Chat Dock.
     def toggle_ai_dock(self, enabled):
