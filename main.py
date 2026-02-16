@@ -59,7 +59,7 @@ if __name__ == "__main__":
         app.setStyle("Fusion")
     window = MainWindow()
     window.setAutoFillBackground(True)
-    icon_path = resource_path("core/icon.ico")  # bundled with --add-data "core;core"
+    icon_path = resource_path("core/images/icon.ico")  # bundled with --add-data "core;core"
     window.setWindowIcon(QIcon(icon_path))
     window.show()
     sys.exit(app.exec_())
